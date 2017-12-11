@@ -1,16 +1,15 @@
 package com.sas.sainal.expense
 
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
-
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+
 
 class MainActivity : AppCompatActivity() {
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,5 +48,6 @@ class MainActivity : AppCompatActivity() {
         // Remove the below line after defining your own ad unit ID.
         private val TOAST_TEXT = "Test ads are being shown. " + "To show live ads, replace the ad unit ID in res/values/strings.xml with your own ad unit ID."
     }
+
 
 }
