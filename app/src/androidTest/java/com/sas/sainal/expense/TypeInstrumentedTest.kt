@@ -36,7 +36,7 @@ class TypeInstrumentedTest {
 
     @Before
     fun setup() {
-        databaseHandler.clearTable(ExpenseDatabaseHandler.Table.type)
+        databaseHandler.clearTable(ExpenseDatabaseHandler.Table.TYPE)
     }
 
     @Test
@@ -46,14 +46,14 @@ class TypeInstrumentedTest {
 
     @Test
     fun testInitialCountType() {
-        assertEquals(0, databaseHandler.getSpendRecordsCount(ExpenseDatabaseHandler.Table.type))
+        assertEquals(0, databaseHandler.getCount(ExpenseDatabaseHandler.Table.TYPE))
     }
 
     @Test
     fun testCountAfterNewType() {
         databaseHandler.addSpendType(TEST_TYPE3)
         databaseHandler.addSpendType(TEST_TYPE1)
-        assertEquals(2, databaseHandler.getSpendRecordsCount(ExpenseDatabaseHandler.Table.type))
+        assertEquals(2, databaseHandler.getCount(ExpenseDatabaseHandler.Table.TYPE))
     }
     @Test
     fun testDuplicateType() {

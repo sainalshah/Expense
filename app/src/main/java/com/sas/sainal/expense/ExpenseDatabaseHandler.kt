@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import java.text.SimpleDateFormat
 
 /**
  * Created by sainal on 12/10/17.
@@ -14,28 +13,28 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         ExpenseDatabaseHandler.DATABASE_NAME, null, ExpenseDatabaseHandler.DATABASE_VERSION) {
 
     enum class Table {
-        type, records
+        TYPE, RECORD
+    }
+
+    enum class Key {
+        //Records table attribute keys
+        RECORD_ID,
+        RECORD_TYPE, RECORD_AMOUNT, RECORD_DATE,
+
+        //Type table attribute keys
+        TYPE_ID,
+        TYPE_NAME
     }
 
     // Kotlin does not allow static variables or functions
     companion object {
-        val DATABASE_NAME = "record_db_kot"
+        val DATABASE_NAME = "spend_record_database"
 
         val DATABASE_VERSION = 1
 
-        val RECORDS_TABLE_NAME = "records"
-
-        //KEY followed by table name followed by attribute name
-        val KEY_RECORDS_ID = "record_id"
-        val KEY_RECORDS_TYPE = "record_type"
-        val KEY_RECORDS_AMOUNT = "amount"
-        val KEY_RECORDS_DATE = "date_of_creation"
-
-        val TYPE_TABLE_NAME = "type"
-        val KEY_TYPE_ID = "type_id"
-        val KEY_TYPE_NAME = "type_name"
-
-        val NOT_EXIST:Long = -2
+        val NOT_EXIST: Long = -2
+        val SQL_ERROR: Long = -1
+        val DATE_FORMAT = "E MMM dd HH:mm:ss zzz yyyy"
     }
 
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {
@@ -43,26 +42,27 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         // type and it is primary key for the table, a new column with name
         // type and it is of type TEXT(String), a new column with name amount as
         // TEXT(String) type
-        val CREATE_TYPE_TABLE_SCRIPT = "CREATE TABLE " + TYPE_TABLE_NAME +
+        val CREATE_TYPE_TABLE_SCRIPT = "CREATE TABLE " + Table.TYPE.name +
                 "(" +
-                KEY_TYPE_ID + " INTEGER PRIMARY KEY," +
-                KEY_TYPE_NAME + " TEXT" +
+                Key.TYPE_ID.name + " INTEGER PRIMARY KEY," +
+                Key.TYPE_NAME.name + " TEXT" +
                 ")"
-        val CREATE_RECORDS_TABLE_SCRIPT = "CREATE TABLE " + RECORDS_TABLE_NAME +
+        val CREATE_RECORDS_TABLE_SCRIPT = "CREATE TABLE " + Table.RECORD.name +
                 "(" +
-                KEY_RECORDS_ID + " INTEGER PRIMARY KEY," +
-                KEY_RECORDS_TYPE + " INTEGER," +
-                KEY_RECORDS_AMOUNT + " TEXT," +
-                KEY_RECORDS_DATE + " TEXT," +
-                "FOREIGN KEY(" + KEY_RECORDS_TYPE + ") REFERENCES " + TYPE_TABLE_NAME + " (" + KEY_TYPE_ID + ")" +
+                Key.RECORD_ID.name + " INTEGER PRIMARY KEY," +
+                Key.RECORD_TYPE.name + " INTEGER," +
+                Key.RECORD_AMOUNT.name + " DECIMAL(10, 5)," +
+                Key.RECORD_DATE.name + " TEXT," +
+                "FOREIGN KEY(" + Key.RECORD_TYPE.name + ") REFERENCES " + Table.TYPE.name + " (" + Key.TYPE_ID.name + ")" +
                 ")"
+        sqLiteDatabase.execSQL("PRAGMA foreign_keys = ON")
         sqLiteDatabase.execSQL(CREATE_TYPE_TABLE_SCRIPT)
         sqLiteDatabase.execSQL(CREATE_RECORDS_TABLE_SCRIPT)
     }
 
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, i: Int, i1: Int) {
         // Drop older record table if it exists
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + RECORDS_TABLE_NAME)
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS ${Table.RECORD.name}")
 
         // call onCreate method so it creates new table again
         onCreate(sqLiteDatabase)
@@ -72,43 +72,50 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
      * CRUD Operations (create, Read, Update, Delete)
      */
 
-    // Adding new SpendRecord
-    fun addSpendRecord(record: SpendRecord) {
-        // Get writable database
-        val db = this.writableDatabase
+    fun typeExists(type: String): Boolean {
+        return getTypeId(type) >= 0
+    }
 
-        val values = ContentValues()
-        values.put(KEY_RECORDS_TYPE, getTypeId(record.type)) // SpendRecord Title
-        values.put(KEY_RECORDS_AMOUNT, record.amount) // SpendRecord Content
-        values.put(KEY_RECORDS_DATE, record.date.toString())
-        // Inserting new row into records table
-        db.insert(RECORDS_TABLE_NAME, null, values)
-        db.close() // Closing database connection
+    // Adding new SpendRecord
+    fun addSpendRecord(record: SpendRecord): Long {
+        val typeId = getTypeId(record.type)
+        if (typeId >= 0) {
+            val db = this.writableDatabase
+
+            val values = ContentValues()
+            values.put(Key.RECORD_TYPE.name, typeId) // SpendRecord Title
+            values.put(Key.RECORD_AMOUNT.name, record.amount) // SpendRecord Content
+            values.put(Key.RECORD_DATE.name, record.date)
+            // Inserting new row into records table
+            return db.insert(Table.RECORD.name, null, values)
+        }
+        return SQL_ERROR
     }
 
 
     // Get Single SpendRecord
-    fun getSpendRecord(id: Int): SpendRecord? {
+    fun getSpendRecord(id: Long): SpendRecord? {
         val db = this.readableDatabase
         var record: SpendRecord? = null
 
         // SQL query for getting a record from the database
-        val selectQuery = "SELECT T1." + KEY_RECORDS_ID + ",T2." + KEY_TYPE_NAME +
-                "T1." + KEY_RECORDS_AMOUNT + ",T1." + KEY_RECORDS_DATE + " FROM " + RECORDS_TABLE_NAME + "T1, " + TYPE_TABLE_NAME + "T2" +
-                "WHERE T1." + KEY_RECORDS_TYPE + "=T2." + KEY_TYPE_ID + " AND T1." + KEY_RECORDS_ID + "=" + id
+        val selectQuery = """SELECT T1.${Key.RECORD_ID.name}, T2.${Key.TYPE_NAME.name},
+                T1.${Key.RECORD_AMOUNT.name},T1.${Key.RECORD_DATE.name} FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
+                WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name} AND T1.${Key.RECORD_ID.name}=$id"""
 
 
         val cursor = db.rawQuery(selectQuery, null)
 
 
         cursor.let {
-            cursor.moveToFirst()
-            record = SpendRecord(
-                    cursor.getString(0).toInt(),
-                    cursor.getString(1),
-                    cursor.getString(2).toDouble(),
-                    SimpleDateFormat("dd/MM/yyyy").parse(cursor.getString(3))
-            )
+            if (cursor.moveToFirst()) {
+                record = SpendRecord(
+                        cursor.getString(0).toLong(),
+                        cursor.getString(1),
+                        cursor.getString(2).toDouble(),
+                        cursor.getString(3)
+                )
+            }
         }
 
         // return record
@@ -122,9 +129,9 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val db = this.readableDatabase
 
         // SQL query for getting all records from the database
-        val selectQuery = "SELECT T1." + KEY_RECORDS_ID + ",T2." + KEY_TYPE_NAME +
-                "T1." + KEY_RECORDS_AMOUNT + ",T1." + KEY_RECORDS_DATE + " FROM " + RECORDS_TABLE_NAME + "T1, " + TYPE_TABLE_NAME + "T2" +
-                "WHERE T1." + KEY_RECORDS_TYPE + "=T2." + KEY_TYPE_ID
+        val selectQuery = """SELECT T1.${Key.RECORD_ID.name}, T2.${Key.TYPE_NAME.name},
+                T1.${Key.RECORD_AMOUNT.name},T1.${Key.RECORD_DATE.name} FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
+                WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}"""
 
 
         val cursor = db.rawQuery(selectQuery, null)
@@ -134,17 +141,16 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
                 var recordList = arrayListOf<SpendRecord>()
                 do {
                     var record = SpendRecord(
-                            cursor.getString(0).toInt(),
+                            cursor.getString(0).toLong(),
                             cursor.getString(1),
                             cursor.getString(2).toDouble(),
-                            SimpleDateFormat("dd/MM/yyyy").parse(cursor.getString(3))
+                            cursor.getString(3)
                     )
                     // Adding SpendRecord to list
                     recordList.add(record)
                 } while (cursor.moveToNext())
 
                 cursor.close()
-                db.close()
                 // return recordlist if there is records in database
                 return recordList
             }
@@ -154,33 +160,30 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     }
 
     // Updating single record
-    fun updateSpendRecord(record: SpendRecord): Int {
-        val db = this.writableDatabase
+    fun updateSpendRecord(record: SpendRecord): Long {
+        if (record.id != null && typeExists(record.type)) {
+            val db = this.writableDatabase
+            val updateSql = """UPDATE ${Table.RECORD.name} SET ${Key.RECORD_TYPE}='${getTypeId(record.type)}',
+                |${Key.RECORD_AMOUNT}=${record.amount}, ${Key.RECORD_DATE}='${record.date}'
+                |WHERE ${Key.RECORD_ID}=${record.id}""".trimMargin()
 
-        // New values
-        val values = ContentValues()
-        values.put(KEY_RECORDS_TYPE, record.type)
-        values.put(KEY_RECORDS_AMOUNT, record.amount)
-        values.put(KEY_RECORDS_DATE, record.date.toString())
-
-        // updating row
-        return db.update(RECORDS_TABLE_NAME, values, KEY_RECORDS_TYPE + " = ?",
-                arrayOf(record.type))
+            db.execSQL(updateSql)
+        }
+        return SQL_ERROR
     }
 
     // Deleting single SpendRecord
-    fun deleteSpendRecord(record: SpendRecord) {
+    fun deleteSpendRecord(id:Long) {
         val db = this.writableDatabase
         db.delete(
-                RECORDS_TABLE_NAME, // table name
-                KEY_RECORDS_TYPE + " = ?", // selection
-                arrayOf(record.type) // selectionArgs
+                Table.RECORD.name, // table name
+                Key.RECORD_ID.name + " = ?", // selection
+                arrayOf(id.toString()) // selectionArgs
         )
-        db.close()
     }
 
     // Getting SpendRecords Count
-    fun getSpendRecordsCount(table: Table): Int {
+    fun getCount(table: Table): Int {
         val db = this.writableDatabase
 
         val countQuery = "SELECT  * FROM " + table.name
@@ -189,7 +192,6 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val count = cursor.count
 
         cursor.close()
-        db.close()
 
         // return count
         return count
@@ -201,13 +203,13 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         var id: Long = NOT_EXIST
         // Get writable database
         val db = this.writableDatabase
-        val projection = arrayOf(KEY_TYPE_ID, KEY_TYPE_NAME)
+        val projection = arrayOf(Key.TYPE_ID.name, Key.TYPE_NAME.name)
 
 
         // Filter results WHERE "column_name" = 'value'
         // here selection is column_name and
         // selectionArgs is value
-        val selection = KEY_TYPE_NAME + "=?"
+        val selection = Key.TYPE_NAME.name + "=?"
         val selectionArgs = arrayOf(typeName)
 
         // The order in which your result needs to be returned
@@ -217,7 +219,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val limit: String? = null // pass null if you dont want it to limit
 
         val cursor = db.query(
-                TYPE_TABLE_NAME,        // The table to query
+                Table.TYPE.name,        // The table to query
                 projection,         // The columns to return
                 selection,          // The columns for WHERE clause
                 selectionArgs,      // The values for WHERE clause;
@@ -232,28 +234,28 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
                 id = cursor.getString(0).toLong()
             }
         }
+        cursor.close()
         return id
     }
 
-    fun getAllSpendType():List<String>?{
+    fun getAllSpendType(): List<String>? {
 
         // here this refers to SQLiteDatabase
         val db = this.readableDatabase
 
         // SQL query for getting all records from the database
-        val selectQuery = "SELECT  $KEY_TYPE_NAME FROM $TYPE_TABLE_NAME"
+        val selectQuery = "SELECT  ${Key.TYPE_NAME.name} FROM ${Table.TYPE.name}"
         val cursor = db.rawQuery(selectQuery, null)
 
         cursor.let {
             if (cursor.moveToFirst()) {
-                var listOfType = arrayListOf<String>()
+                val listOfType = arrayListOf<String>()
                 do {
                     listOfType.add(cursor.getString(0))
                 } while (cursor.moveToNext())
 
                 cursor.close()
 
-                db.close()
                 return listOfType
             }
         }
@@ -261,31 +263,31 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         //return null if cursor return null
         return null
     }
+
     fun addSpendType(type: String): Long {
         var returnVal: Long = NOT_EXIST   //return -2 if type exists, return -1 for db error
         val db = this.writableDatabase
         // SQL query for getting all records from the database
-        val selectQuery = "SELECT  * FROM $TYPE_TABLE_NAME WHERE $KEY_TYPE_NAME='$type'"
+        val selectQuery = "SELECT  * FROM ${Table.TYPE.name} WHERE ${Key.TYPE_NAME.name}='$type'"
         val cursor = db.rawQuery(selectQuery, null)
 
         if (cursor.count <= 0) {
             val values = ContentValues()
-            values.put(KEY_TYPE_NAME, type)
+            values.put(Key.TYPE_NAME.name, type)
 
-            returnVal = db.insert(TYPE_TABLE_NAME, null, values)
+            returnVal = db.insert(Table.TYPE.name, null, values)
         }
-        db.close()
+        cursor.close()
         return returnVal
     }
 
     fun deleteSpendType(type_name: String) {
         val db = this.writableDatabase
         db.delete(
-                TYPE_TABLE_NAME, // table name
-                "$KEY_TYPE_NAME = '$type_name'", // selection
+                Table.TYPE.name, // table name
+                "${Key.TYPE_NAME.name} = '$type_name'", // selection
                 null// selectionArgs
         )
-        db.close()
     }
 
 
@@ -295,6 +297,5 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val delSql = "DELETE  FROM ${table.name}"
 
         db.execSQL(delSql)
-        db.close()
     }
 }
