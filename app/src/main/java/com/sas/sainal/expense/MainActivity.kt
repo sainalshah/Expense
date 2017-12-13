@@ -7,6 +7,10 @@ import android.view.MenuItem
 import android.widget.Toast
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import android.content.Intent
+import android.support.design.widget.FloatingActionButton
+import android.support.v7.widget.Toolbar
+import android.view.View
 
 
 class MainActivity : AppCompatActivity() {
@@ -15,14 +19,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Load an ad into the AdMob banner view.
-        val adView = findViewById<AdView>(R.id.adView)
-        val adRequest = AdRequest.Builder()
-                .setRequestAgent("android_studio:ad_template").build()
-        adView.loadAd(adRequest)
 
-        // Toasts the test ad message on the screen. Remove this after defining your own ad unit ID.
-        Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show()
+        val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
+        setSupportActionBar(toolbar)
+
+        val fab = findViewById<View>(R.id.fab) as FloatingActionButton
+        fab.setOnClickListener{
+                // Click action
+                val intent = Intent(this@MainActivity, NewMessageActivity::class.java)
+                startActivity(intent)
+        }
+        // Load an ad into the AdMob banner view.
+//        val adView = findViewById<AdView>(R.id.adView)
+//        val adRequest = AdRequest.Builder()
+//                .setRequestAgent("android_studio:ad_template").build()
+//        adView.loadAd(adRequest)
+//
+//        // Toasts the test ad message on the screen. Remove this after defining your own ad unit ID.
+//        Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show()
     }
 
 
