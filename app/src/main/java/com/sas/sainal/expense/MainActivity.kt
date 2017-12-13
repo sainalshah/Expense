@@ -4,9 +4,6 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
 import android.content.Intent
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.widget.Toolbar
@@ -26,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         val fab = findViewById<View>(R.id.fab) as FloatingActionButton
         fab.setOnClickListener{
                 // Click action
-                val intent = Intent(this@MainActivity, NewMessageActivity::class.java)
+                val intent = Intent(this@MainActivity, NewRecordActivity::class.java)
                 startActivity(intent)
         }
         // Load an ad into the AdMob banner view.

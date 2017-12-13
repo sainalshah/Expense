@@ -27,8 +27,8 @@
         </activity> <!-- Include the AdActivity configChanges and theme. -->
 
         <activity
-            android:name=".NewMessageActivity"
-            android:label="NewMessageActivity"
+            android:name=".NewRecordActivity"
+            android:label="@string/new_record_title"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
