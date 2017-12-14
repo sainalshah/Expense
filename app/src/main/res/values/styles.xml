@@ -8,4 +8,17 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="windowNoTitle">true</item>
+
+        <item name="windowFixedWidthMajor">80%</item>
+        <item name="windowFixedWidthMinor">80%</item>
+        <item name="windowFixedHeightMajor">40%</item>
+        <item name="windowFixedHeightMinor">40%</item>
+
+        <!--<item name="windowMinWidthMajor">65%</item>-->
+        <!--<item name="windowMinWidthMinor">65%</item>-->
+        <!--<item name="windowMinHeightMajor">45%</item>-->
+        <!--<item name="windowMinHeightMinor">45%</item>-->
+    </style>
 </resources>

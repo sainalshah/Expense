@@ -18,7 +18,6 @@
         android:id="@+id/record_type_field"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:hint="@string/type_hint"/>
 
@@ -35,8 +34,8 @@
         android:id="@+id/add_record_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/record_amount_field"
         android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
         android:text="@string/new_record_btn" />
 
 </RelativeLayout>

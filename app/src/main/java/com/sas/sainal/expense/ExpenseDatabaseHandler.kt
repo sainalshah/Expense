@@ -34,7 +34,6 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
         val NOT_EXIST: Long = -2
         val SQL_ERROR: Long = -1
-        val DATE_FORMAT = "E MMM dd HH:mm:ss zzz yyyy"
     }
 
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {

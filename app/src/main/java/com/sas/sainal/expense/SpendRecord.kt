@@ -8,4 +8,12 @@ import java.util.*
 
 data class SpendRecord(var id: Long?, var type: String, var amount: Double, var date: String) {
     constructor(type: String, amount: Double, date: String) : this(null, type, amount, date)
+
+    fun display():String{
+        return """
+        id: $id
+        type: $type
+        amount: $amount
+        date: $date"""
+    }
 }

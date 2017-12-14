@@ -11,7 +11,13 @@ import android.view.View
 
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        var databaseHandler: ExpenseDatabaseHandler? = null
+        val DEBUG_TAG = "MainActivityTag"
+        private val TOAST_TEXT = """Test ads are being shown. " + "To show live ads, replace the ad
+            |unit ID in res/values/strings.xml with your own ad unit ID.""".trimMargin()
 
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -26,14 +32,10 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(this@MainActivity, NewRecordActivity::class.java)
                 startActivity(intent)
         }
-        // Load an ad into the AdMob banner view.
-//        val adView = findViewById<AdView>(R.id.adView)
-//        val adRequest = AdRequest.Builder()
-//                .setRequestAgent("android_studio:ad_template").build()
-//        adView.loadAd(adRequest)
-//
-//        // Toasts the test ad message on the screen. Remove this after defining your own ad unit ID.
-//        Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show()
+
+        databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
+        setup_db()
+
     }
 
 
@@ -55,9 +57,14 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    companion object {
-        // Remove the below line after defining your own ad unit ID.
-        private val TOAST_TEXT = "Test ads are being shown. " + "To show live ads, replace the ad unit ID in res/values/strings.xml with your own ad unit ID."
+    fun setup_db(){
+
+        val TEST_TYPE1: String = "shopping"
+        val TEST_TYPE2: String = "clothing"
+        val TEST_TYPE3: String = "grocery"
+        databaseHandler?.addSpendType(TEST_TYPE3)
+        databaseHandler?.addSpendType(TEST_TYPE1)
+        databaseHandler?.addSpendType(TEST_TYPE2)
     }
 
 

@@ -3,10 +3,13 @@ package com.sas.sainal.expense
 import android.content.Context
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
+import android.util.Log
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -24,13 +27,18 @@ class RecordInstrumentedTest {
 
         val TEST_AMOUNT1: Double = 100.00
         val TEST_AMOUNT2: Double = 50.00
-        var sqlDate1 = java.sql.Date(java.util.Date().time)
-        var sqlDate2 = java.sql.Date(java.util.Date().time)
+        var sqlDate1 = getCurrentDatetime()
+        var sqlDate2 = getCurrentDatetime()
 
         private val context: Context = InstrumentationRegistry.getTargetContext()
         val databaseHandler = ExpenseDatabaseHandler(context)
-    }
 
+        fun getCurrentDatetime(): String {
+            val sqlDate = java.sql.Date(java.util.Date().time)
+            val df: DateFormat = SimpleDateFormat("YYYY-MM-dd hh:mm:ss")
+            return df.format(sqlDate)
+        }
+    }
     @Test
     fun useAppContext() {
         // Context of the app under test.

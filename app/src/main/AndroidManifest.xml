@@ -29,7 +29,8 @@
         <activity
             android:name=".NewRecordActivity"
             android:label="@string/new_record_title"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/DialogTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
