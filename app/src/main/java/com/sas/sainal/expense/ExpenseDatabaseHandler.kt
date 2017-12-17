@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.support.design.widget.TabLayout
 
 /**
  * Created by sainal on 12/10/17.
@@ -29,7 +28,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
     // Kotlin does not allow static variables or functions
     companion object {
-        val DATABASE_NAME = "spend_record_database"
+        val DATABASE_NAME = "expense_db"
 
         val DATABASE_VERSION = 1
 
@@ -52,7 +51,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
                 Key.RECORD_ID.name + " INTEGER PRIMARY KEY," +
                 Key.RECORD_TYPE.name + " INTEGER," +
                 Key.RECORD_AMOUNT.name + " DECIMAL(10, 5)," +
-                Key.RECORD_DATE.name + " TEXT," +
+                Key.RECORD_DATE.name + " REAL," +
                 "FOREIGN KEY(" + Key.RECORD_TYPE.name + ") REFERENCES " + Table.TYPE.name + " (" + Key.TYPE_ID.name + ")" +
                 ")"
         sqLiteDatabase.execSQL("PRAGMA foreign_keys = ON")
@@ -305,4 +304,5 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
         db.execSQL(delSql)
     }
+
 }
