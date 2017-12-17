@@ -8,6 +8,10 @@ import android.content.Intent
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.widget.Toolbar
 import android.view.View
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -22,6 +26,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val recList = findViewById<View>(R.id.cardList) as RecyclerView
+        recList.setHasFixedSize(true)
+        val llm = LinearLayoutManager(this)
+        llm.orientation = LinearLayoutManager.VERTICAL
+        recList.layoutManager = llm
+
+        val sa = SummaryAdapter(listOf(SummaryInfo("Weekly expense",992.00),SummaryInfo("Monthly expense",12121.00)))
+        recList.adapter = sa
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)

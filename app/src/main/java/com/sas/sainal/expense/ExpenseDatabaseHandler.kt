@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.support.design.widget.TabLayout
 
 /**
  * Created by sainal on 12/10/17.
@@ -71,7 +72,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
      * CRUD Operations (create, Read, Update, Delete)
      */
 
-    fun typeExists(type: String): Boolean {
+    private fun typeExists(type: String): Boolean {
         return getTypeId(type) >= 0
     }
 
@@ -116,7 +117,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
                 )
             }
         }
-
+        cursor.close()
         // return record
         return record
     }
@@ -137,9 +138,9 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
         cursor.let {
             if (cursor.moveToFirst()) {
-                var recordList = arrayListOf<SpendRecord>()
+                val recordList = arrayListOf<SpendRecord>()
                 do {
-                    var record = SpendRecord(
+                    val record = SpendRecord(
                             cursor.getString(0).toLong(),
                             cursor.getString(1),
                             cursor.getString(2).toDouble(),
@@ -289,6 +290,13 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         )
     }
 
+//    fun getWeeklySpending():String{
+//        val sql = """SELECT SUM(${Key.RECORD_AMOUNT} FROM ${Table.RECORD}
+//            |WHERE
+//        """.trimMargin()
+//
+//        return
+//    }
 
     fun clearTable(table: Table) {
         val db = this.writableDatabase
