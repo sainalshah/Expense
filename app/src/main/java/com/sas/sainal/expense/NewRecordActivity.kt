@@ -45,7 +45,7 @@ class NewRecordActivity : AppCompatActivity() {
 
     private fun addNewRecord() {
         val newRecord = SpendRecord(typeField?.selectedItem.toString(),
-                amountField?.text.toString().toDouble(),getCurrentDatetime())
+                amountField?.text.toString().toDouble(),Datetime().getCurrentDatetime())
         databaseHandler?.addSpendRecord(newRecord)
         testNewRecord()
         //close the activity
@@ -53,7 +53,7 @@ class NewRecordActivity : AppCompatActivity() {
     }
 
     private fun testNewRecord(){
-        val records = databaseHandler?.getAllSpendRecords()
+        val records = databaseHandler?.getAllSpendRecords(ExpenseDatabaseHandler.Period.ALL)
         Log.v(DEBUG_TAG,"before displaying all records")
         for (rec in records!!.iterator()) {
             Log.v(DEBUG_TAG, rec.display())
@@ -80,9 +80,4 @@ class NewRecordActivity : AppCompatActivity() {
         }
     }
 
-    private fun getCurrentDatetime(): String {
-        val sqlDate = java.sql.Date(java.util.Date().time)
-        val df: DateFormat = SimpleDateFormat("YYYY-MM-dd hh:mm:ss")
-        return df.format(sqlDate)
-    }
 }

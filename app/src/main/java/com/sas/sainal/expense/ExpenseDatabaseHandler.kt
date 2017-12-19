@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 
 /**
  * Created by sainal on 12/10/17.
@@ -11,6 +12,12 @@ import android.database.sqlite.SQLiteOpenHelper
 
 class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         ExpenseDatabaseHandler.DATABASE_NAME, null, ExpenseDatabaseHandler.DATABASE_VERSION) {
+
+    enum class Period {
+        //Different periods for retrieval of database records.
+        LAST_DAY,
+        LAST_WEEK, LAST_MONTH, ALL
+    }
 
     enum class Table {
         TYPE, RECORD
@@ -29,7 +36,6 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     // Kotlin does not allow static variables or functions
     companion object {
         val DATABASE_NAME = "expense_db"
-
         val DATABASE_VERSION = 1
 
         val NOT_EXIST: Long = -2
@@ -122,16 +128,30 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     }
 
     // Get All SpendRecords
-    fun getAllSpendRecords(): List<SpendRecord>? {
+    fun getAllSpendRecords(period: Period): List<SpendRecord>? {
 
         // here this refers to SQLiteDatabase
         val db = this.readableDatabase
 
-        // SQL query for getting all records from the database
-        val selectQuery = """SELECT T1.${Key.RECORD_ID.name}, T2.${Key.TYPE_NAME.name},
+        var selectQuery: String
+        if (period == Period.ALL) {
+            // SQL query for getting all records from the database
+            selectQuery = """SELECT T1.${Key.RECORD_ID.name}, T2.${Key.TYPE_NAME.name},
                 T1.${Key.RECORD_AMOUNT.name},T1.${Key.RECORD_DATE.name} FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
                 WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}"""
+        } else {
 
+            var periodClause = ""
+            when (period) {
+                Period.LAST_MONTH -> periodClause = "start of month"
+                Period.LAST_WEEK -> periodClause = "-6 days"
+                Period.LAST_DAY -> periodClause = "start of day"
+            }
+            selectQuery = """SELECT T1.${Key.RECORD_ID.name}, T2.${Key.TYPE_NAME.name},
+                T1.${Key.RECORD_AMOUNT.name},T1.${Key.RECORD_DATE.name} FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
+                WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}
+                AND T1.${Key.RECORD_DATE.name} BETWEEN datetime('now', '$periodClause') AND datetime('now', 'localtime')"""
+        }
 
         val cursor = db.rawQuery(selectQuery, null)
 
@@ -172,7 +192,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     }
 
     // Deleting single SpendRecord
-    fun deleteSpendRecord(id:Long) {
+    fun deleteSpendRecord(id: Long) {
         val db = this.writableDatabase
         db.delete(
                 Table.RECORD.name, // table name
@@ -289,13 +309,6 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         )
     }
 
-//    fun getWeeklySpending():String{
-//        val sql = """SELECT SUM(${Key.RECORD_AMOUNT} FROM ${Table.RECORD}
-//            |WHERE
-//        """.trimMargin()
-//
-//        return
-//    }
 
     fun clearTable(table: Table) {
         val db = this.writableDatabase
