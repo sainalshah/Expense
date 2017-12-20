@@ -1,55 +1,57 @@
 package com.sas.sainal.expense
 
-import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
 import android.content.Intent
+import android.os.AsyncTask
+import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
-import android.support.v7.widget.Toolbar
-import android.view.View
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-
-
+import android.support.v7.widget.Toolbar
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 
 
 class MainActivity : AppCompatActivity() {
     companion object {
         var databaseHandler: ExpenseDatabaseHandler? = null
         val DEBUG_TAG = "MainActivityTag"
-        private val TOAST_TEXT = """Test ads are being shown. " + "To show live ads, replace the ad
-            |unit ID in res/values/strings.xml with your own ad unit ID.""".trimMargin()
-
+        var recList: RecyclerView? = null
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val recList = findViewById<View>(R.id.cardList) as RecyclerView
-        recList.setHasFixedSize(true)
-        val llm = LinearLayoutManager(this)
-        llm.orientation = LinearLayoutManager.VERTICAL
-        recList.layoutManager = llm
-
-        val sa = SummaryAdapter(listOf(SummaryInfo("Weekly expense",992.00),SummaryInfo("Monthly expense",12121.00)))
-        recList.adapter = sa
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
         val fab = findViewById<View>(R.id.fab) as FloatingActionButton
-        fab.setOnClickListener{
-                // Click action
-                val intent = Intent(this@MainActivity, NewRecordActivity::class.java)
-                startActivity(intent)
+        fab.setOnClickListener {
+            // Click action
+            val intent = Intent(this@MainActivity, NewRecordActivity::class.java)
+            startActivity(intent)
         }
 
         databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
-        setup_db()
+        setupDB()
 
+        recList = findViewById<View>(R.id.cardList) as RecyclerView
+        recList?.setHasFixedSize(true)
+        val llm = LinearLayoutManager(this)
+        llm.orientation = LinearLayoutManager.VERTICAL
+        recList?.layoutManager = llm
+
+        updateHomePage()
     }
 
+
+    override fun onResume() {
+        super.onResume()
+        updateHomePage()
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -69,7 +71,16 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun setup_db(){
+    private fun updateHomePage() {
+        GetPeriodSpendingSum().execute()
+    }
+
+    fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double) {
+        val summaryAdapter = SummaryAdapter(listOf(SummaryInfo("Weekly expense", weeklyAmount), SummaryInfo("Monthly expense", monthlyAmount)))
+        recList?.adapter = summaryAdapter
+    }
+
+    private fun setupDB() {
 
         val TEST_TYPE1: String = "shopping"
         val TEST_TYPE2: String = "clothing"
@@ -79,5 +90,18 @@ class MainActivity : AppCompatActivity() {
         databaseHandler?.addSpendType(TEST_TYPE2)
     }
 
+    private  inner class GetPeriodSpendingSum : AsyncTask<Any, Any, Array<Double>>() {
+        var databaseHandler = MainActivity.databaseHandler
 
+        override fun doInBackground(vararg params: Any): Array<Double> {
+            val weeklyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
+            val montlyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
+
+            return arrayOf(weeklyAmt, montlyAmt)
+        }
+
+        override fun onPostExecute(result: Array<Double>) {
+            updateRecyclerView(result[0], result[1])
+        }
+    }
 }

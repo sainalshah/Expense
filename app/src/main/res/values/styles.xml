@@ -13,8 +13,8 @@
 
         <item name="windowFixedWidthMajor">80%</item>
         <item name="windowFixedWidthMinor">80%</item>
-        <item name="windowFixedHeightMajor">40%</item>
-        <item name="windowFixedHeightMinor">40%</item>
+        <item name="windowFixedHeightMajor">90%</item>
+        <item name="windowFixedHeightMinor">90%</item>
 
         <!--<item name="windowMinWidthMajor">65%</item>-->
         <!--<item name="windowMinWidthMinor">65%</item>-->

@@ -30,6 +30,7 @@
         android:inputType="numberDecimal"
         android:hint="@string/amount_hint"/>
 
+
     <Button
         android:id="@+id/add_record_btn"
         android:layout_width="wrap_content"
