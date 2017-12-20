@@ -2,9 +2,9 @@ package com.sas.sainal.expense
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.util.Log
 
 /**
  * Created by sainal on 12/10/17.
@@ -15,7 +15,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
     enum class Period {
         //Different periods for retrieval of database records.
-        LAST_DAY,
+        TODAY,
         LAST_WEEK, LAST_MONTH, ALL
     }
 
@@ -128,16 +128,22 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     }
 
     // Get All SpendRecords
-    fun getAllSpendRecords(period: Period): List<SpendRecord>? {
+    private fun getSpendRecords(period: Period, columns: List<String>): Cursor? {
 
         // here this refers to SQLiteDatabase
         val db = this.readableDatabase
 
+        var columnStr = ""
+
+        for (column in columns) {
+            columnStr += column + ", "
+        }
+        columnStr = columnStr.substring(0, columnStr.length - 2)
+
         var selectQuery: String
         if (period == Period.ALL) {
             // SQL query for getting all records from the database
-            selectQuery = """SELECT T1.${Key.RECORD_ID.name}, T2.${Key.TYPE_NAME.name},
-                T1.${Key.RECORD_AMOUNT.name},T1.${Key.RECORD_DATE.name} FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
+            selectQuery = """SELECT $columnStr FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
                 WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}"""
         } else {
 
@@ -145,18 +151,34 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
             when (period) {
                 Period.LAST_MONTH -> periodClause = "start of month"
                 Period.LAST_WEEK -> periodClause = "-6 days"
-                Period.LAST_DAY -> periodClause = "start of day"
+                Period.TODAY -> periodClause = "start of day"
             }
-            selectQuery = """SELECT T1.${Key.RECORD_ID.name}, T2.${Key.TYPE_NAME.name},
-                T1.${Key.RECORD_AMOUNT.name},T1.${Key.RECORD_DATE.name} FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
+            selectQuery = """SELECT $columnStr FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
                 WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}
                 AND T1.${Key.RECORD_DATE.name} BETWEEN datetime('now', '$periodClause') AND datetime('now', 'localtime')"""
         }
 
-        val cursor = db.rawQuery(selectQuery, null)
+        return db.rawQuery(selectQuery, null)
 
+    }
+
+    fun getPeriodSpendingSum(period: Period):Double {
+
+        val cursor = getSpendRecords(period, listOf("SUM(${Key.RECORD_AMOUNT})"))
         cursor.let {
-            if (cursor.moveToFirst()) {
+            if (cursor!!.moveToFirst()) {
+                return cursor.getDouble(0)
+            }
+        }
+        //return error if the cursor was null
+        return SQL_ERROR as Double
+    }
+
+    fun getPeriodSpendRecord(period: Period): List<SpendRecord>? {
+        val cursor = getSpendRecords(period, listOf(Key.RECORD_ID.name, Key.TYPE_NAME.name,
+                Key.RECORD_AMOUNT.name, Key.RECORD_DATE.name))
+        cursor.let {
+            if (cursor!!.moveToFirst()) {
                 val recordList = arrayListOf<SpendRecord>()
                 do {
                     val record = SpendRecord(

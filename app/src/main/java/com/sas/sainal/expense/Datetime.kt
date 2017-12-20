@@ -17,7 +17,7 @@ class Datetime{
     /*get random date in the period specified.
         * First argument is how days back is the starting date from current date
         * Second argument is how many days back is the end date from current date*/
-    fun getRandomDatetime(numberDaysBack: Int, period: Int): String {
+    fun getRandomDatetime(numberDaysBack: Int, period: Double): String {
         val cal = Calendar.getInstance()
         cal.time = Date()
         cal.add(Calendar.DATE, numberDaysBack)
@@ -25,7 +25,7 @@ class Datetime{
 
         val rnd = Random()
         // Get an Epoch value with dateBeforeXDays
-        val ms: Long = dateBeforeXDays.time  + Math.abs(rnd.nextLong()) % (Math.abs(period) * 24L * 60 * 60 * 1000)
+        val ms: Long = dateBeforeXDays.time  + Math.abs(rnd.nextLong()) % (Math.abs(period) * 24L * 60 * 60 * 1000).toLong()
 
         // Construct a date
 

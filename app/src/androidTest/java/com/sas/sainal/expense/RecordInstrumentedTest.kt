@@ -4,7 +4,9 @@ import android.content.Context
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
 import android.util.Log
+import org.hamcrest.CoreMatchers.`is`
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -138,7 +140,7 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, sqlDate1))
         databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_AMOUNT2, sqlDate1))
         databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_AMOUNT2, sqlDate2))
-        val recordList = databaseHandler.getAllSpendRecords(ExpenseDatabaseHandler.Period.ALL)
+        val recordList = databaseHandler.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.ALL)
 
         val actualList = listOf(recordList?.get(0)?.type, recordList?.get(1)?.type, recordList?.get(2)?.type)
 
@@ -150,10 +152,10 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendType(TEST_TYPE3)
         var i = 0
         while (i < RANDOM_TEST_SAMPLE_SIZE) {
-            databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, dt.getRandomDatetime(-6, 14)))
+            databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, dt.getRandomDatetime(-6, 14.0)))
             i++
         }
-        val recordList = databaseHandler.getAllSpendRecords(ExpenseDatabaseHandler.Period.LAST_WEEK)
+        val recordList = databaseHandler.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.LAST_WEEK)
 
         for (record in recordList!!.iterator()) {
             Log.v(TAG, "testing date from db: ${record.date}")
@@ -166,11 +168,11 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendType(TEST_TYPE3)
         var i = 0
         while (i < RANDOM_TEST_SAMPLE_SIZE) {
-            val date = dt.getRandomDatetime(-30, 40)
+            val date = dt.getRandomDatetime(-30, 40.0)
             databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, date))
             i++
         }
-        val recordList = databaseHandler.getAllSpendRecords(ExpenseDatabaseHandler.Period.LAST_MONTH)
+        val recordList = databaseHandler.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.LAST_MONTH)
 
         Log.v(TAG, "\n\nall record count: ${recordList?.count()}")
         var lastWeekCount = 0
@@ -182,16 +184,17 @@ class RecordInstrumentedTest {
 
         Log.v(TAG, "last week record count: $lastWeekCount")
     }
+
     @Test
     fun testGetLastDayRecord() {
         databaseHandler.addSpendType(TEST_TYPE3)
         var i = 0
         while (i < RANDOM_TEST_SAMPLE_SIZE) {
-            val date = dt.getRandomDatetime(-4, 5)
+            val date = dt.getRandomDatetime(-4, 5.0)
             databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, date))
             i++
         }
-        val recordList = databaseHandler.getAllSpendRecords(ExpenseDatabaseHandler.Period.LAST_DAY)
+        val recordList = databaseHandler.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.TODAY)
 
         Log.v(TAG, "\n\nall record count: ${recordList?.count()}")
         var lastDayCount = 0
@@ -203,6 +206,28 @@ class RecordInstrumentedTest {
 
         Log.v(TAG, "last day record count: $lastDayCount")
     }
+
+    @Test
+    fun testGetLastDaySpendingSum() {
+        databaseHandler.addSpendType(TEST_TYPE2)
+
+        val date1 = dt.getRandomDatetime(0, 0.25)
+        val date2 = dt.getRandomDatetime(-4, 1.0)
+        val date3 = dt.getRandomDatetime(0, 0.25)
+
+        Log.v(TAG,"dates generated: $date1\n$date2\n$date3")
+        // add a record for today
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_AMOUNT1, date1))
+
+        // add a record for 4 days back
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_AMOUNT2, date2))
+
+        // add a record for today
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_AMOUNT2, date3))
+
+        assertThat(databaseHandler.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.TODAY), `is`(TEST_AMOUNT2 + TEST_AMOUNT1))
+    }
+
     @Test
     fun testDeleteType() {
 
