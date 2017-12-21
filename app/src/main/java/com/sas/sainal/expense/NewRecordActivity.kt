@@ -36,6 +36,9 @@ class NewRecordActivity : AppCompatActivity() {
         typeField = findViewById(R.id.record_type_field)
         amountField = findViewById(R.id.record_amount_field)
 
+
+        databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
+
         val addBtn = findViewById<Button>(R.id.add_record_btn)
         addBtn.setOnClickListener {
 

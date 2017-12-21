@@ -1,5 +1,7 @@
 package com.sas.sainal.expense
 
+import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
@@ -11,19 +13,41 @@ import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import java.lang.ref.WeakReference
 
 
 class MainActivity : AppCompatActivity() {
+
+
+    private var recList: RecyclerView? = null
+    val DEBUG_TAG = "MainActivityTag"
     companion object {
         var databaseHandler: ExpenseDatabaseHandler? = null
-        val DEBUG_TAG = "MainActivityTag"
-        var recList: RecyclerView? = null
+
+        class GetPeriodSpendingSum (context:MainActivity): AsyncTask<Any, Any, Array<Double>>() {
+            private var activityReference: WeakReference<MainActivity>? = WeakReference(context)
+            override fun doInBackground(vararg params: Any): Array<Double> {
+                val weeklyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
+                val montlyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
+
+                return arrayOf(weeklyAmt, montlyAmt)
+            }
+
+            override fun onPostExecute(result: Array<Double>) {
+                updateRecyclerView(result[0], result[1])
+            }
+
+            private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double) {
+                val summaryAdapter = SummaryAdapter(listOf(SummaryInfo("Weekly expense", weeklyAmount), SummaryInfo("Monthly expense", monthlyAmount)))
+                //activityReference?.get()?.recList?.adapter = summaryAdapter
+                activityReference?.get()?.runOnUiThread(Runnable { activityReference?.get()?.recList?.adapter = summaryAdapter })
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
 
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
@@ -47,6 +71,10 @@ class MainActivity : AppCompatActivity() {
         updateHomePage()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        recList = null
+    }
 
     override fun onResume() {
         super.onResume()
@@ -72,13 +100,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateHomePage() {
-        GetPeriodSpendingSum().execute()
+        GetPeriodSpendingSum(this).execute()
     }
 
-    fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double) {
-        val summaryAdapter = SummaryAdapter(listOf(SummaryInfo("Weekly expense", weeklyAmount), SummaryInfo("Monthly expense", monthlyAmount)))
-        recList?.adapter = summaryAdapter
-    }
 
     private fun setupDB() {
 
@@ -90,18 +114,5 @@ class MainActivity : AppCompatActivity() {
         databaseHandler?.addSpendType(TEST_TYPE2)
     }
 
-    private  inner class GetPeriodSpendingSum : AsyncTask<Any, Any, Array<Double>>() {
-        var databaseHandler = MainActivity.databaseHandler
 
-        override fun doInBackground(vararg params: Any): Array<Double> {
-            val weeklyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
-            val montlyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
-
-            return arrayOf(weeklyAmt, montlyAmt)
-        }
-
-        override fun onPostExecute(result: Array<Double>) {
-            updateRecyclerView(result[0], result[1])
-        }
-    }
 }
