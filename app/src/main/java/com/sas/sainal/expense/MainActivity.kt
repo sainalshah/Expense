@@ -21,12 +21,14 @@ class MainActivity : AppCompatActivity() {
 
     private var recList: RecyclerView? = null
     val DEBUG_TAG = "MainActivityTag"
+    private var databaseHandler: ExpenseDatabaseHandler? = null
+
     companion object {
-        var databaseHandler: ExpenseDatabaseHandler? = null
 
         class GetPeriodSpendingSum (context:MainActivity): AsyncTask<Any, Any, Array<Double>>() {
             private var activityReference: WeakReference<MainActivity>? = WeakReference(context)
             override fun doInBackground(vararg params: Any): Array<Double> {
+                val databaseHandler = activityReference?.get()?.getDatabaseHandle()
                 val weeklyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
                 val montlyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
 
@@ -45,6 +47,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun getDatabaseHandle(): ExpenseDatabaseHandler?{
+        return databaseHandler
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

@@ -17,8 +17,8 @@ import java.text.SimpleDateFormat
  */
 class NewRecordActivity : AppCompatActivity() {
 
+    var databaseHandler: ExpenseDatabaseHandler? = null
     companion object {
-        var databaseHandler: ExpenseDatabaseHandler? = MainActivity.databaseHandler
         val DEBUG_TAG = "NewRecordActivityTag"
 
         var typeField: Spinner? = null
@@ -31,13 +31,12 @@ class NewRecordActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
+        databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
+
         populateTypeField()
 
         typeField = findViewById(R.id.record_type_field)
         amountField = findViewById(R.id.record_amount_field)
-
-
-        databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
 
         val addBtn = findViewById<Button>(R.id.add_record_btn)
         addBtn.setOnClickListener {
