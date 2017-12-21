@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
 
-        class GetPeriodSpendingSum (context:MainActivity): AsyncTask<Any, Any, Array<Double>>() {
+        class GetPeriodSpendingSum(context: MainActivity) : AsyncTask<Any, Any, Array<Double>>() {
             private var activityReference: WeakReference<MainActivity>? = WeakReference(context)
             override fun doInBackground(vararg params: Any): Array<Double> {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
@@ -40,16 +40,19 @@ class MainActivity : AppCompatActivity() {
             }
 
             private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double) {
-                val summaryAdapter = SummaryAdapter(listOf(SummaryInfo("Weekly expense", weeklyAmount), SummaryInfo("Monthly expense", monthlyAmount)))
+                val weekly = String.format("%.2f", weeklyAmount).toDouble()
+                val monthly = String.format("%.2f", monthlyAmount).toDouble()
+                val summaryAdapter = SummaryAdapter(listOf(SummaryInfo("Weekly expense", weekly), SummaryInfo("Monthly expense", monthly)))
                 //activityReference?.get()?.recList?.adapter = summaryAdapter
                 activityReference?.get()?.runOnUiThread(Runnable { activityReference?.get()?.recList?.adapter = summaryAdapter })
             }
         }
     }
 
-    fun getDatabaseHandle(): ExpenseDatabaseHandler?{
+    fun getDatabaseHandle(): ExpenseDatabaseHandler? {
         return databaseHandler
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

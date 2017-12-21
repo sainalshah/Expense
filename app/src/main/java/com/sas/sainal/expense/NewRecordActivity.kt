@@ -1,15 +1,11 @@
 package com.sas.sainal.expense
 
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.util.Log
-import android.view.View
 import android.widget.*
-import android.widget.AdapterView.OnItemSelectedListener
-import android.widget.AdapterView.TEXT_ALIGNMENT_GRAVITY
-import java.text.DateFormat
-import java.text.SimpleDateFormat
+import java.lang.ref.WeakReference
 
 
 /**
@@ -17,12 +13,52 @@ import java.text.SimpleDateFormat
  */
 class NewRecordActivity : AppCompatActivity() {
 
-    var databaseHandler: ExpenseDatabaseHandler? = null
+    private var databaseHandler: ExpenseDatabaseHandler? = null
+
+    private var typeField: Spinner? = null
+    private var amountField: EditText? = null
+
     companion object {
         val DEBUG_TAG = "NewRecordActivityTag"
+        class PopulateTypeField(context:NewRecordActivity): AsyncTask<Any, Any, Array<String>?>() {
+            private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
+            override fun doInBackground(vararg params: Any): Array<String>? {
+                val databaseHandler = activityReference?.get()?.getDatabaseHandle()
 
-        var typeField: Spinner? = null
-        var amountField: EditText? = null
+                return databaseHandler?.getAllSpendType()?.toTypedArray()
+            }
+
+            override fun onPostExecute(result: Array<String>?) {
+                populateTypeField(result)
+            }
+
+            private fun populateTypeField(items: Array<String>?) {
+                activityReference?.get()?.runOnUiThread(Runnable {
+                    val dynamicSpinner = activityReference?.get()?.findViewById<Spinner>(R.id.record_type_field)
+
+
+                    val adapter = ArrayAdapter(activityReference?.get()?.application,
+                            android.R.layout.simple_spinner_item, items)
+
+                    dynamicSpinner?.adapter = adapter
+                })
+
+            }
+        }
+
+        class AddNewRecord(context:NewRecordActivity): AsyncTask<String, Any, Any>() {
+            private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
+            override fun doInBackground(vararg params: String) {
+                val databaseHandler = activityReference?.get()?.getDatabaseHandle()
+
+
+                val newRecord = SpendRecord(params[0], params[1].toDouble(), Datetime().getCurrentDatetime())
+                databaseHandler?.addSpendRecord(newRecord)
+            }
+            override fun onPostExecute(result: Any) {
+                activityReference?.get()?.finish()
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +69,7 @@ class NewRecordActivity : AppCompatActivity() {
 
         databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
 
-        populateTypeField()
+        PopulateTypeField(this).execute()
 
         typeField = findViewById(R.id.record_type_field)
         amountField = findViewById(R.id.record_amount_field)
@@ -44,34 +80,19 @@ class NewRecordActivity : AppCompatActivity() {
             addNewRecord()
         }
     }
-
-    private fun addNewRecord() {
-        val newRecord = SpendRecord(typeField?.selectedItem.toString(),
-                amountField?.text.toString().toDouble(), Datetime().getCurrentDatetime())
-        databaseHandler?.addSpendRecord(newRecord)
-        //close the activity
-        finish()
+    fun getDatabaseHandle(): ExpenseDatabaseHandler? {
+        return databaseHandler
     }
-
-    private fun populateTypeField() {
-        val dynamicSpinner = findViewById<Spinner>(R.id.record_type_field)
-
-        val items = databaseHandler?.getAllSpendType()?.toTypedArray()
-
-        val adapter = ArrayAdapter(this,
-                android.R.layout.simple_spinner_item, items)
-
-        dynamicSpinner.adapter = adapter
-        dynamicSpinner.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View,
-                                        position: Int, id: Long) {
-                Log.v(DEBUG_TAG, "${parent.getItemAtPosition(position)} is selected as type")
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                // TODO Auto-generated method stub
-            }
+    private fun addNewRecord() {
+        val type = typeField?.selectedItem.toString()
+        val amtTxt = amountField?.text.toString()
+        if (amtTxt.isNotEmpty()) {
+            AddNewRecord(this).execute(type,amtTxt)
+        } else {
+            Toast.makeText(applicationContext, R.string.amount_empty_error, Toast.LENGTH_LONG).show()
         }
     }
+
+
 
 }
