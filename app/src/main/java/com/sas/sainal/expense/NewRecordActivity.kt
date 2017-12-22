@@ -20,7 +20,8 @@ class NewRecordActivity : AppCompatActivity() {
 
     companion object {
         val DEBUG_TAG = "NewRecordActivityTag"
-        class PopulateTypeField(context:NewRecordActivity): AsyncTask<Any, Any, Array<String>?>() {
+
+        class PopulateTypeField(context: NewRecordActivity) : AsyncTask<Any, Any, Array<String>?>() {
             private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
             override fun doInBackground(vararg params: Any): Array<String>? {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
@@ -46,7 +47,7 @@ class NewRecordActivity : AppCompatActivity() {
             }
         }
 
-        class AddNewRecord(context:NewRecordActivity): AsyncTask<String, Any, Any>() {
+        class AddNewRecord(context: NewRecordActivity) : AsyncTask<String, Any, Any>() {
             private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
             override fun doInBackground(vararg params: String) {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
@@ -55,6 +56,7 @@ class NewRecordActivity : AppCompatActivity() {
                 val newRecord = SpendRecord(params[0], params[1].toDouble(), Datetime().getCurrentDatetime())
                 databaseHandler?.addSpendRecord(newRecord)
             }
+
             override fun onPostExecute(result: Any) {
                 activityReference?.get()?.finish()
             }
@@ -80,19 +82,20 @@ class NewRecordActivity : AppCompatActivity() {
             addNewRecord()
         }
     }
+
     fun getDatabaseHandle(): ExpenseDatabaseHandler? {
         return databaseHandler
     }
+
     private fun addNewRecord() {
         val type = typeField?.selectedItem.toString()
         val amtTxt = amountField?.text.toString()
         if (amtTxt.isNotEmpty()) {
-            AddNewRecord(this).execute(type,amtTxt)
+            AddNewRecord(this).execute(type, amtTxt)
         } else {
             Toast.makeText(applicationContext, R.string.amount_empty_error, Toast.LENGTH_LONG).show()
         }
     }
-
 
 
 }

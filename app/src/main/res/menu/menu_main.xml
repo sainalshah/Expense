@@ -7,4 +7,9 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/db_manager"
+        android:orderInCategory="100"
+        android:title="DB manager"
+        app:showAsAction="never" />
 </menu>

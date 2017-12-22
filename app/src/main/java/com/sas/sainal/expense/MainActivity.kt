@@ -1,7 +1,6 @@
 package com.sas.sainal.expense
 
-import android.app.Application
-import android.content.Context
+import android.app.PendingIntent.getActivity
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
@@ -42,9 +41,26 @@ class MainActivity : AppCompatActivity() {
             private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double) {
                 val weekly = String.format("%.2f", weeklyAmount).toDouble()
                 val monthly = String.format("%.2f", monthlyAmount).toDouble()
-                val summaryAdapter = SummaryAdapter(listOf(SummaryInfo("Weekly expense", weekly), SummaryInfo("Monthly expense", monthly)))
-                //activityReference?.get()?.recList?.adapter = summaryAdapter
-                activityReference?.get()?.runOnUiThread(Runnable { activityReference?.get()?.recList?.adapter = summaryAdapter })
+                val summaryAdapter = SummaryAdapter(listOf(SummaryInfo("Weekly expense", weekly),
+                        SummaryInfo("Monthly expense", monthly)))
+                activityReference?.get()?.runOnUiThread(Runnable {
+                    activityReference?.get()?.recList?.adapter = summaryAdapter
+                })
+            }
+        }
+
+        class SetupDB(context: MainActivity) : AsyncTask<String, Any, Any>() {
+            private var activityReference: WeakReference<MainActivity>? = WeakReference(context)
+            override fun doInBackground(vararg params: String) {
+                val databaseHandler = activityReference?.get()?.getDatabaseHandle()
+
+                //don't setup type table if at least SPECIAL_TYPE_INCOME exists.
+                if (databaseHandler?.getTypeId(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
+                        == ExpenseDatabaseHandler.ERROR_NOT_EXIST) {
+                    for (type in params) {
+                        databaseHandler?.addSpendType(type)
+                    }
+                }
             }
         }
     }
@@ -101,10 +117,15 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         val id = item.itemId
 
-        return if (id == R.id.action_settings) {
-            true
-        } else super.onOptionsItemSelected(item)
-
+        when (id) {
+            R.id.action_settings -> return true
+            R.id.db_manager -> {
+                val dbmanager = Intent(this@MainActivity, AndroidDatabaseManager::class.java)
+                startActivity(dbmanager)
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
     }
 
     private fun updateHomePage() {
@@ -114,12 +135,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupDB() {
 
-        val TEST_TYPE1: String = "shopping"
-        val TEST_TYPE2: String = "clothing"
-        val TEST_TYPE3: String = "grocery"
-        databaseHandler?.addSpendType(TEST_TYPE3)
-        databaseHandler?.addSpendType(TEST_TYPE1)
-        databaseHandler?.addSpendType(TEST_TYPE2)
+        val type1 = "shopping"
+        val type2 = "clothing"
+        val type3 = "grocery"
+
+        SetupDB(this).execute(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME, type1, type2, type3)
+
     }
 
 

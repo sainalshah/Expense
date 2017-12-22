@@ -58,7 +58,7 @@ class TypeInstrumentedTest {
     @Test
     fun testDuplicateType() {
         databaseHandler.addSpendType(TEST_TYPE3)
-        assertEquals(-2, databaseHandler.addSpendType(TEST_TYPE3))
+        assertEquals(ExpenseDatabaseHandler.ERROR_EXIST, databaseHandler.addSpendType(TEST_TYPE3))
     }
 
     @Test

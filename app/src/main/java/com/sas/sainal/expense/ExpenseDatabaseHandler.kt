@@ -3,8 +3,12 @@ package com.sas.sainal.expense
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
+import android.database.MatrixCursor
+import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
+
 
 /**
  * Created by sainal on 12/10/17.
@@ -12,6 +16,8 @@ import android.database.sqlite.SQLiteOpenHelper
 
 class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         ExpenseDatabaseHandler.DATABASE_NAME, null, ExpenseDatabaseHandler.DATABASE_VERSION) {
+
+    private var dt: Datetime? = null
 
     enum class Period {
         //Different periods for retrieval of database records.
@@ -38,8 +44,11 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val DATABASE_NAME = "expense_db"
         val DATABASE_VERSION = 1
 
-        val NOT_EXIST: Long = -2
+        val ERROR_NOT_EXIST = -2L
+        val ERROR_EXIST = -3L
         val SQL_ERROR: Long = -1
+
+        val SPECIAL_TYPE_INCOME = "income"
     }
 
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {
@@ -140,11 +149,13 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         }
         columnStr = columnStr.substring(0, columnStr.length - 2)
 
-        var selectQuery: String
+        val incomeID = getTypeId(SPECIAL_TYPE_INCOME)
+
+        val selectQuery: String
         if (period == Period.ALL) {
             // SQL query for getting all records from the database
             selectQuery = """SELECT $columnStr FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
-                WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}"""
+                WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name} AND T1.${Key.RECORD_TYPE.name}<>$incomeID"""
         } else {
 
             var periodClause = ""
@@ -155,14 +166,15 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
             }
             selectQuery = """SELECT $columnStr FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
                 WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}
-                AND T1.${Key.RECORD_DATE.name} BETWEEN datetime('now', '$periodClause') AND datetime('now', 'localtime')"""
+                AND T1.${Key.RECORD_DATE.name} BETWEEN datetime('now', '$periodClause') AND datetime('now', 'localtime')
+                AND T1.${Key.RECORD_TYPE.name}<>$incomeID"""
         }
 
         return db.rawQuery(selectQuery, null)
 
     }
 
-    fun getPeriodSpendingSum(period: Period):Double {
+    fun getPeriodSpendingSum(period: Period): Double {
 
         val cursor = getSpendRecords(period, listOf("SUM(${Key.RECORD_AMOUNT})"))
         cursor.let {
@@ -241,7 +253,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     fun getTypeId(typeName: String): Long {
 
         //if the type cannot be found, return this value
-        var id: Long = NOT_EXIST
+        var id: Long = ERROR_NOT_EXIST
         // Get writable database
         val db = this.writableDatabase
         val projection = arrayOf(Key.TYPE_ID.name, Key.TYPE_NAME.name)
@@ -285,7 +297,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val db = this.readableDatabase
 
         // SQL query for getting all records from the database
-        val selectQuery = "SELECT  ${Key.TYPE_NAME.name} FROM ${Table.TYPE.name}"
+        val selectQuery = "SELECT  ${Key.TYPE_NAME.name} FROM ${Table.TYPE.name} WHERE ${Key.TYPE_NAME.name} <> '$SPECIAL_TYPE_INCOME'"
         val cursor = db.rawQuery(selectQuery, null)
 
         cursor.let {
@@ -305,8 +317,33 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         return null
     }
 
+    fun addIncome(amt: Double) {
+        //TODO: implement addIncome which adds an entry to spending_record table with type SPECIAL_TYPE_INCOME
+        if (dt == null) {
+            dt = Datetime()
+        }
+        addSpendRecord(SpendRecord(SPECIAL_TYPE_INCOME, amt, dt!!.getCurrentDatetime()))
+    }
+
+    fun getBalance(): Double {
+        //TODO: implement getBalance which returns the difference of total income and total spending
+        val db = this.readableDatabase
+        val incomeID = getTypeId(SPECIAL_TYPE_INCOME)
+        val balanceQuery = """SELECT (total_income - total_spending) AS balance FROM
+            |(SELECT IFNULL(SUM(${Key.RECORD_AMOUNT.name}), 0) AS total_income FROM ${Table.RECORD.name} T1 WHERE T1.${Key.RECORD_TYPE.name}=$incomeID),
+            |(SELECT IFNULL(SUM(${Key.RECORD_AMOUNT.name}), 0) AS total_spending FROM ${Table.RECORD.name} T2 WHERE T2.${Key.RECORD_TYPE.name}<>$incomeID)
+        """.trimMargin()
+        val cursor = db.rawQuery(balanceQuery,null)
+        cursor.let {
+            if (cursor.moveToFirst()) {
+                return cursor.getString(0).toDouble()
+            }
+        }
+        return SQL_ERROR.toDouble()
+    }
+
     fun addSpendType(type: String): Long {
-        var returnVal: Long = NOT_EXIST   //return -2 if type exists, return -1 for db error
+        var returnVal: Long = ERROR_EXIST  //return error exist if type exists, return -1 for db error
         val db = this.writableDatabase
         // SQL query for getting all records from the database
         val selectQuery = "SELECT  * FROM ${Table.TYPE.name} WHERE ${Key.TYPE_NAME.name}='$type'"
@@ -340,4 +377,47 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         db.execSQL(delSql)
     }
 
+    fun getData(Query: String): ArrayList<Cursor?> {
+        //get writable database
+        val sqlDB = this.writableDatabase
+        val columns = arrayOf("message")
+        //an array list of cursor to save two cursors one has results from the query
+        //other cursor stores error message if any errors are triggered
+        val alc = ArrayList<Cursor?>(2)
+        val Cursor2 = MatrixCursor(columns)
+        alc.add(null)
+        alc.add(null)
+
+        try {
+//execute the query results will be save in Cursor c
+            val c = sqlDB.rawQuery(Query, null)
+
+            //add value to cursor2
+            Cursor2.addRow(arrayOf<Any>("Success"))
+
+            alc[1] = Cursor2
+            if (null != c && c.count > 0) {
+
+                alc[0] = c
+                c.moveToFirst()
+
+                return alc
+            }
+            return alc
+        } catch (sqlEx: SQLException) {
+            Log.d("printing exception", sqlEx.toString())
+            //if any exceptions are triggered save the error message to cursor an return the arraylist
+            Cursor2.addRow(arrayOf<Any>("" + sqlEx.toString()))
+            alc[1] = Cursor2
+            return alc
+        } catch (ex: Exception) {
+            Log.d("printing exception", ex.message)
+
+            //if any exceptions are triggered save the error message to cursor an return the arraylist
+            Cursor2.addRow(arrayOf<Any>("" + ex.message))
+            alc[1] = Cursor2
+            return alc
+        }
+
+    }
 }

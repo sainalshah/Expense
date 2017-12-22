@@ -20,16 +20,18 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class RecordInstrumentedTest {
 
+    val TAG: String = "RECORD_TEST"
+    val TEST_TYPE1 = "shopping"
+    val TEST_TYPE2 = "clothing"
+    val TEST_TYPE3 = "grocery"
+
+    val TEST_INCOME_AMOUNT = 1002.00
+    val TEST_SPENDING_AMOUNT1 = 100.00
+    val TEST_SPENDING_AMOUNT2 = 50.00
+
     companion object {
 
         val dt = Datetime()
-        val TAG: String = "RECORD_TEST"
-        val TEST_TYPE1: String = "shopping"
-        val TEST_TYPE2: String = "clothing"
-        val TEST_TYPE3: String = "grocery"
-
-        val TEST_AMOUNT1: Double = 100.00
-        val TEST_AMOUNT2: Double = 50.00
         var sqlDate1 = dt.getCurrentDatetime()
         var sqlDate2 = dt.getCurrentDatetime()
 
@@ -37,7 +39,7 @@ class RecordInstrumentedTest {
         private val context: Context = InstrumentationRegistry.getTargetContext()
         val databaseHandler = ExpenseDatabaseHandler(context)
 
-        val RANDOM_TEST_SAMPLE_SIZE = 100
+        val RANDOM_TEST_SAMPLE_SIZE = 10
     }
 
     @Test
@@ -56,7 +58,7 @@ class RecordInstrumentedTest {
     @Test
     fun testCreateNewRecord() {
         databaseHandler.addSpendType(TEST_TYPE2)
-        val newRecord = SpendRecord(TEST_TYPE2, TEST_AMOUNT1, sqlDate1)
+        val newRecord = SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT1, sqlDate1)
         assertEquals(1, databaseHandler.addSpendRecord(newRecord))
     }
 
@@ -69,25 +71,25 @@ class RecordInstrumentedTest {
     fun testCountAfterNewType() {
         databaseHandler.addSpendType(TEST_TYPE3)
         databaseHandler.addSpendType(TEST_TYPE1)
-        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, sqlDate1))
-        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_AMOUNT1, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_SPENDING_AMOUNT1, sqlDate1))
 
         assertEquals(2, databaseHandler.getCount(ExpenseDatabaseHandler.Table.RECORD))
     }
 
     @Test
     fun testNonExistTypeAddRecord() {
-        assertEquals(ExpenseDatabaseHandler.SQL_ERROR, databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_AMOUNT1, sqlDate1)))
+        assertEquals(ExpenseDatabaseHandler.SQL_ERROR, databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_SPENDING_AMOUNT1, sqlDate1)))
     }
 
     @Test
     fun testGetRecord() {
         databaseHandler.addSpendType(TEST_TYPE3)
-        val recordId = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, sqlDate1))
+        val recordId = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
         val record = databaseHandler.getSpendRecord(recordId)
 
         assertEquals(TEST_TYPE3, record?.type)
-        assertEquals(TEST_AMOUNT1, record?.amount)
+        assertEquals(TEST_SPENDING_AMOUNT1, record?.amount)
         assertEquals(sqlDate1, record?.date)
     }
 
@@ -96,8 +98,8 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendType(TEST_TYPE3)
         databaseHandler.addSpendType(TEST_TYPE1)
 
-        val recordId = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, sqlDate1))
-        val retVal = databaseHandler.updateSpendRecord(SpendRecord(recordId, TEST_TYPE1, TEST_AMOUNT2, sqlDate2))
+        val recordId = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
+        val retVal = databaseHandler.updateSpendRecord(SpendRecord(recordId, TEST_TYPE1, TEST_SPENDING_AMOUNT2, sqlDate2))
         assert(retVal >= 0)
     }
 
@@ -107,13 +109,13 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendType(TEST_TYPE3)
         databaseHandler.addSpendType(TEST_TYPE1)
 
-        val recordId = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, sqlDate1))
-        databaseHandler.updateSpendRecord(SpendRecord(recordId, TEST_TYPE1, TEST_AMOUNT2, sqlDate2))
+        val recordId = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
+        databaseHandler.updateSpendRecord(SpendRecord(recordId, TEST_TYPE1, TEST_SPENDING_AMOUNT2, sqlDate2))
 
         val updatedRecord = databaseHandler.getSpendRecord(recordId)
 
         assertEquals(TEST_TYPE1, updatedRecord?.type)
-        assertEquals(TEST_AMOUNT2, updatedRecord?.amount)
+        assertEquals(TEST_SPENDING_AMOUNT2, updatedRecord?.amount)
         assertEquals(sqlDate2, updatedRecord?.date)
     }
 
@@ -121,8 +123,8 @@ class RecordInstrumentedTest {
     fun testNonExistTypeUpdateRecord() {
         databaseHandler.addSpendType(TEST_TYPE3)
 
-        val recordId = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, sqlDate1))
-        val retVal = databaseHandler.updateSpendRecord(SpendRecord(recordId, TEST_TYPE1, TEST_AMOUNT2, sqlDate2))
+        val recordId = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
+        val retVal = databaseHandler.updateSpendRecord(SpendRecord(recordId, TEST_TYPE1, TEST_SPENDING_AMOUNT2, sqlDate2))
 
 
         assertEquals(ExpenseDatabaseHandler.SQL_ERROR, retVal)
@@ -137,9 +139,9 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendType(TEST_TYPE1)
         databaseHandler.addSpendType(TEST_TYPE2)
 
-        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, sqlDate1))
-        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_AMOUNT2, sqlDate1))
-        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_AMOUNT2, sqlDate2))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_SPENDING_AMOUNT2, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT2, sqlDate2))
         val recordList = databaseHandler.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.ALL)
 
         val actualList = listOf(recordList?.get(0)?.type, recordList?.get(1)?.type, recordList?.get(2)?.type)
@@ -152,7 +154,7 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendType(TEST_TYPE3)
         var i = 0
         while (i < RANDOM_TEST_SAMPLE_SIZE) {
-            databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, dt.getRandomDatetime(-6, 14.0)))
+            databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, dt.getRandomDatetime(-6, 14.0)))
             i++
         }
         val recordList = databaseHandler.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.LAST_WEEK)
@@ -169,7 +171,7 @@ class RecordInstrumentedTest {
         var i = 0
         while (i < RANDOM_TEST_SAMPLE_SIZE) {
             val date = dt.getRandomDatetime(-30, 40.0)
-            databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, date))
+            databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, date))
             i++
         }
         val recordList = databaseHandler.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.LAST_MONTH)
@@ -191,7 +193,7 @@ class RecordInstrumentedTest {
         var i = 0
         while (i < RANDOM_TEST_SAMPLE_SIZE) {
             val date = dt.getRandomDatetime(-4, 5.0)
-            databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, date))
+            databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, date))
             i++
         }
         val recordList = databaseHandler.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.TODAY)
@@ -215,23 +217,71 @@ class RecordInstrumentedTest {
         val date2 = dt.getRandomDatetime(-4, 1.0)
         val date3 = dt.getRandomDatetime(0, 0.25)
 
-        Log.v(TAG,"dates generated: $date1\n$date2\n$date3")
+        Log.v(TAG, "dates generated: $date1\n$date2\n$date3")
         // add a record for today
-        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_AMOUNT1, date1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT1, date1))
 
         // add a record for 4 days back
-        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_AMOUNT2, date2))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT2, date2))
 
         // add a record for today
-        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_AMOUNT2, date3))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT2, date3))
 
-        assertThat(databaseHandler.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.TODAY), `is`(TEST_AMOUNT2 + TEST_AMOUNT1))
+        assertThat(databaseHandler.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.TODAY), `is`(TEST_SPENDING_AMOUNT2 + TEST_SPENDING_AMOUNT1))
+    }
+
+    @Test
+    fun testGetSpendingWithIncome() {
+        databaseHandler.addSpendType(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
+
+        databaseHandler.addSpendType(TEST_TYPE3)
+        databaseHandler.addSpendType(TEST_TYPE1)
+        databaseHandler.addSpendType(TEST_TYPE2)
+
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_SPENDING_AMOUNT2, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT2, sqlDate2))
+
+        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
+
+        assertThat(databaseHandler.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.ALL),
+                `is`(TEST_SPENDING_AMOUNT2 + TEST_SPENDING_AMOUNT2 + TEST_SPENDING_AMOUNT1))
+    }
+
+    @Test
+    fun testGetBalanceWithNoSpending() {
+
+        databaseHandler.addSpendType(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
+        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
+        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
+
+        assertThat(databaseHandler.getBalance(),
+                `is`(TEST_INCOME_AMOUNT + TEST_INCOME_AMOUNT))
+    }
+
+    @Test
+    fun testGetBalanceWithSpending() {
+
+        databaseHandler.addSpendType(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
+        databaseHandler.addSpendType(TEST_TYPE3)
+        databaseHandler.addSpendType(TEST_TYPE1)
+        databaseHandler.addSpendType(TEST_TYPE2)
+
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_SPENDING_AMOUNT2, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT2, sqlDate2))
+
+        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
+        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
+
+        assertThat(databaseHandler.getBalance(),
+                `is`((TEST_INCOME_AMOUNT * 2) - ((TEST_SPENDING_AMOUNT2*2)+TEST_SPENDING_AMOUNT1)))
     }
 
     @Test
     fun testDeleteType() {
 
-        val retVal = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_AMOUNT1, sqlDate1))
+        val retVal = databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE3, TEST_SPENDING_AMOUNT1, sqlDate1))
 
         databaseHandler.deleteSpendRecord(retVal)
 
