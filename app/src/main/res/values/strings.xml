@@ -11,7 +11,7 @@
     <string name="type_hint">Type</string>
 
     <string name="amount_empty_error">Please enter an amount</string>
-    <string name="add_income_btn">Add Income</string>
+    <string name="add_income_text">Add Income</string>
     <string name="weekly_label">Weekly expense</string>
     <string name="monthly_label">Monthly expense</string>
     <string name="balance_label">Balance</string>

@@ -20,13 +20,20 @@ class NewRecordActivity : AppCompatActivity() {
 
     companion object {
         val DEBUG_TAG = "NewRecordActivityTag"
+        val INTENT_KEY = "spending"
+        val TYPE_SPENDING = "Spending"
+        val TYPE_INCOME = "Balance"
 
-        class PopulateTypeField(context: NewRecordActivity) : AsyncTask<Any, Any, Array<String>?>() {
+        class PopulateTypeField(context: NewRecordActivity) : AsyncTask<String, Any, Array<String>?>() {
             private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
-            override fun doInBackground(vararg params: Any): Array<String>? {
+            override fun doInBackground(vararg params: String): Array<String>? {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
 
-                return databaseHandler?.getAllSpendType()?.toTypedArray()
+                return if (params[0] == NewRecordActivity.TYPE_SPENDING) {
+                    databaseHandler?.getAllSpendType()?.toTypedArray()
+                } else {
+                    arrayOf(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
+                }
             }
 
             override fun onPostExecute(result: Array<String>?) {
@@ -68,15 +75,20 @@ class NewRecordActivity : AppCompatActivity() {
         setContentView(R.layout.activity_new_record)
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-
+        getSupportActionBar()?.setDisplayHomeAsUpEnabled(true);
         databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
 
-        PopulateTypeField(this).execute()
+        val type = intent.extras.get(INTENT_KEY) as String
+        PopulateTypeField(this).execute(type)
 
         typeField = findViewById(R.id.record_type_field)
         amountField = findViewById(R.id.record_amount_field)
-
         val addBtn = findViewById<Button>(R.id.add_record_btn)
+        if (type == TYPE_INCOME) {
+            val label = getString(R.string.add_income_text)
+            addBtn.text = label
+            title = label
+        }
         addBtn.setOnClickListener {
 
             addNewRecord()

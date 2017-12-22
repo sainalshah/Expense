@@ -317,14 +317,6 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         return null
     }
 
-    fun addIncome(amt: Double) {
-        //TODO: implement addIncome which adds an entry to spending_record table with type SPECIAL_TYPE_INCOME
-        if (dt == null) {
-            dt = Datetime()
-        }
-        addSpendRecord(SpendRecord(SPECIAL_TYPE_INCOME, amt, dt!!.getCurrentDatetime()))
-    }
-
     fun getBalance(): Double {
         //TODO: implement getBalance which returns the difference of total income and total spending
         val db = this.readableDatabase

@@ -242,7 +242,7 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_SPENDING_AMOUNT2, sqlDate1))
         databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT2, sqlDate2))
 
-        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
+        databaseHandler.addSpendRecord(SpendRecord(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME, TEST_INCOME_AMOUNT, sqlDate1))
 
         assertThat(databaseHandler.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.ALL),
                 `is`(TEST_SPENDING_AMOUNT2 + TEST_SPENDING_AMOUNT2 + TEST_SPENDING_AMOUNT1))
@@ -252,8 +252,8 @@ class RecordInstrumentedTest {
     fun testGetBalanceWithNoSpending() {
 
         databaseHandler.addSpendType(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
-        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
-        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
+        databaseHandler.addSpendRecord(SpendRecord(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME, TEST_INCOME_AMOUNT, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME, TEST_INCOME_AMOUNT, sqlDate2))
 
         assertThat(databaseHandler.getBalance(),
                 `is`(TEST_INCOME_AMOUNT + TEST_INCOME_AMOUNT))
@@ -271,8 +271,8 @@ class RecordInstrumentedTest {
         databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE1, TEST_SPENDING_AMOUNT2, sqlDate1))
         databaseHandler.addSpendRecord(SpendRecord(TEST_TYPE2, TEST_SPENDING_AMOUNT2, sqlDate2))
 
-        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
-        databaseHandler.addIncome(TEST_INCOME_AMOUNT)
+        databaseHandler.addSpendRecord(SpendRecord(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME, TEST_INCOME_AMOUNT, sqlDate1))
+        databaseHandler.addSpendRecord(SpendRecord(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME, TEST_INCOME_AMOUNT, sqlDate2))
 
         assertThat(databaseHandler.getBalance(),
                 `is`((TEST_INCOME_AMOUNT * 2) - ((TEST_SPENDING_AMOUNT2*2)+TEST_SPENDING_AMOUNT1)))

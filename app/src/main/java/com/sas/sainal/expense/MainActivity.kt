@@ -29,27 +29,25 @@ class MainActivity : AppCompatActivity() {
             override fun doInBackground(vararg params: Any): Array<Double> {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
                 val weeklyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
-                val montlyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
-
-                return arrayOf(weeklyAmt, montlyAmt)
+                val monthlyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
+                val balance = databaseHandler!!.getBalance()
+                return arrayOf(weeklyAmt, monthlyAmt,balance)
             }
 
             override fun onPostExecute(result: Array<Double>) {
-                updateRecyclerView(result[0], result[1])
+                updateRecyclerView(result[0], result[1],result[2])
             }
 
-            private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double) {
+            private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double, balance :Double) {
                 val weekly = String.format("%.2f", weeklyAmount).toDouble()
                 val monthly = String.format("%.2f", monthlyAmount).toDouble()
                 val summaryAdapter = SummaryAdapter(listOf(
                         SummaryInfo(activityReference!!.get()!!.getString(R.string.weekly_label), weekly),
-                        SummaryInfo(activityReference!!.get()!!.getString(R.string.monthly_label), monthly)),
-                        SummaryAdapter.TYPE.SPENDING)
-                val balanceAdapter = SummaryAdapter(listOf(SummaryInfo(activityReference!!.get()!!.getString(R.string.balance_label), weekly)),
-                        SummaryAdapter.TYPE.BALANCE)
+                        SummaryInfo(activityReference!!.get()!!.getString(R.string.monthly_label), monthly),
+                        SummaryInfo(activityReference!!.get()!!.getString(R.string.balance_label), balance)),
+                        activityReference?.get()!!)
                 activityReference?.get()?.runOnUiThread(Runnable {
                     activityReference?.get()?.recList?.adapter = summaryAdapter
-                    activityReference?.get()?.balanceCard?.adapter = balanceAdapter
                 })
             }
         }
@@ -84,7 +82,8 @@ class MainActivity : AppCompatActivity() {
         val fab = findViewById<View>(R.id.fab) as FloatingActionButton
         fab.setOnClickListener {
             // Click action
-            val intent = Intent(this@MainActivity, NewRecordActivity::class.java)
+            val intent = Intent(this@MainActivity,
+                    NewRecordActivity::class.java).putExtra(NewRecordActivity.INTENT_KEY, NewRecordActivity.TYPE_SPENDING)
             startActivity(intent)
         }
 
@@ -96,12 +95,6 @@ class MainActivity : AppCompatActivity() {
         val llm = LinearLayoutManager(this)
         llm.orientation = LinearLayoutManager.VERTICAL
         recList?.layoutManager = llm
-
-        balanceCard = findViewById<View>(R.id.balanceCard) as RecyclerView
-        balanceCard?.setHasFixedSize(true)
-        val balanceLlm = LinearLayoutManager(this)
-        balanceLlm.orientation = LinearLayoutManager.VERTICAL
-        balanceCard?.layoutManager = balanceLlm
 
         updateHomePage()
     }
