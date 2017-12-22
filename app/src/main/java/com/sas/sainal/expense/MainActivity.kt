@@ -1,6 +1,5 @@
 package com.sas.sainal.expense
 
-import android.app.PendingIntent.getActivity
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
@@ -19,6 +18,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private var recList: RecyclerView? = null
+    private var balanceCard: RecyclerView? = null
     val DEBUG_TAG = "MainActivityTag"
     private var databaseHandler: ExpenseDatabaseHandler? = null
 
@@ -41,10 +41,15 @@ class MainActivity : AppCompatActivity() {
             private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double) {
                 val weekly = String.format("%.2f", weeklyAmount).toDouble()
                 val monthly = String.format("%.2f", monthlyAmount).toDouble()
-                val summaryAdapter = SummaryAdapter(listOf(SummaryInfo("Weekly expense", weekly),
-                        SummaryInfo("Monthly expense", monthly)))
+                val summaryAdapter = SummaryAdapter(listOf(
+                        SummaryInfo(activityReference!!.get()!!.getString(R.string.weekly_label), weekly),
+                        SummaryInfo(activityReference!!.get()!!.getString(R.string.monthly_label), monthly)),
+                        SummaryAdapter.TYPE.SPENDING)
+                val balanceAdapter = SummaryAdapter(listOf(SummaryInfo(activityReference!!.get()!!.getString(R.string.balance_label), weekly)),
+                        SummaryAdapter.TYPE.BALANCE)
                 activityReference?.get()?.runOnUiThread(Runnable {
                     activityReference?.get()?.recList?.adapter = summaryAdapter
+                    activityReference?.get()?.balanceCard?.adapter = balanceAdapter
                 })
             }
         }
@@ -86,11 +91,17 @@ class MainActivity : AppCompatActivity() {
         databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
         setupDB()
 
-        recList = findViewById<View>(R.id.cardList) as RecyclerView
+        recList = findViewById<View>(R.id.spendingCardList) as RecyclerView
         recList?.setHasFixedSize(true)
         val llm = LinearLayoutManager(this)
         llm.orientation = LinearLayoutManager.VERTICAL
         recList?.layoutManager = llm
+
+        balanceCard = findViewById<View>(R.id.balanceCard) as RecyclerView
+        balanceCard?.setHasFixedSize(true)
+        val balanceLlm = LinearLayoutManager(this)
+        balanceLlm.orientation = LinearLayoutManager.VERTICAL
+        balanceCard?.layoutManager = balanceLlm
 
         updateHomePage()
     }

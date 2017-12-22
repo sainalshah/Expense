@@ -11,8 +11,11 @@ import android.view.ViewGroup
  * Created by sainal on 12/16/17.
  */
 
-class SummaryAdapter(private val summaryList: List<SummaryInfo>) : RecyclerView.Adapter<SummaryAdapter.SummaryViewHolder>() {
+class SummaryAdapter(private val summaryList: List<SummaryInfo>, private val type: TYPE) : RecyclerView.Adapter<SummaryAdapter.SummaryViewHolder>() {
 
+    enum class TYPE {
+        SPENDING, BALANCE
+    }
 
     override fun getItemCount(): Int {
         return summaryList.size
@@ -25,7 +28,13 @@ class SummaryAdapter(private val summaryList: List<SummaryInfo>) : RecyclerView.
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): SummaryViewHolder {
-        val itemView = LayoutInflater.from(viewGroup.context).inflate(R.layout.card_layout, viewGroup, false)
+        val layout: Int =
+                if (type == TYPE.SPENDING) {
+                    R.layout.spending_card_layout
+                } else {
+                    R.layout.balance_card_layout
+                }
+        val itemView = LayoutInflater.from(viewGroup.context).inflate(layout, viewGroup, false)
 
         return SummaryViewHolder(itemView)
     }

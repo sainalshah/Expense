@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="150dp"
     card_view:cardCornerRadius="4dp"
-    android:id="@+id/card_view"
+    android:id="@+id/balance_card_view"
     android:layout_margin="5dp"
     android:layout_alignParentStart="true">
 
@@ -19,6 +19,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
-        android:text="10002.00"
         android:textSize="40sp" />
+    <Button
+        android:id="@+id/add_income_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/add_income_btn"
+        android:layout_gravity="top|right"/>
 </android.support.v7.widget.CardView>
