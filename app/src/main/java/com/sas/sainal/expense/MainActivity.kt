@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
 
         class GetPeriodSpendingSum(context: MainActivity) : AsyncTask<Any, Any, Array<Double>>() {
+            private val amountFormat = "$%.2f"
             private var activityReference: WeakReference<MainActivity>? = WeakReference(context)
             override fun doInBackground(vararg params: Any): Array<Double> {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
@@ -38,9 +39,10 @@ class MainActivity : AppCompatActivity() {
                 updateRecyclerView(result[0], result[1],result[2])
             }
 
-            private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double, balance :Double) {
-                val weekly = String.format("%.2f", weeklyAmount).toDouble()
-                val monthly = String.format("%.2f", monthlyAmount).toDouble()
+            private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double, balanceAmount:Double) {
+                val weekly = String.format(amountFormat, weeklyAmount)
+                val monthly = String.format(amountFormat, monthlyAmount)
+                val balance = String.format(amountFormat, balanceAmount)
                 val summaryAdapter = SummaryAdapter(listOf(
                         SummaryInfo(activityReference!!.get()!!.getString(R.string.weekly_label), weekly),
                         SummaryInfo(activityReference!!.get()!!.getString(R.string.monthly_label), monthly),

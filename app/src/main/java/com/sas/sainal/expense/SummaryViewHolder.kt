@@ -23,7 +23,7 @@ class SummaryAdapter(private val summaryList: List<SummaryInfo>, private val con
     override fun onBindViewHolder(summaryViewHolder: SummaryViewHolder, i: Int) {
         val summary = summaryList[i]
         summaryViewHolder.title.text = summary.title
-        summaryViewHolder.amount.text = summary.amount.toString()
+        summaryViewHolder.amount.text = summary.amount
         if (i != balanceCardIndex) {
             summaryViewHolder.addIncome.visibility = View.GONE
         }

@@ -85,7 +85,7 @@ class NewRecordActivity : AppCompatActivity() {
         amountField = findViewById(R.id.record_amount_field)
         val addBtn = findViewById<Button>(R.id.add_record_btn)
         if (type == TYPE_INCOME) {
-            val label = getString(R.string.add_income_text)
+            val label = getText(R.string.add_income_text)
             addBtn.text = label
             title = label
         }
