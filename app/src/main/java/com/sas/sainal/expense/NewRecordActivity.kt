@@ -41,7 +41,7 @@ class NewRecordActivity : AppCompatActivity() {
             }
 
             private fun populateTypeField(items: Array<String>?) {
-                activityReference?.get()?.runOnUiThread(Runnable {
+                activityReference?.get()?.runOnUiThread({
                     val dynamicSpinner = activityReference?.get()?.findViewById<Spinner>(R.id.record_type_field)
 
 
@@ -75,7 +75,7 @@ class NewRecordActivity : AppCompatActivity() {
         setContentView(R.layout.activity_new_record)
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        getSupportActionBar()?.setDisplayHomeAsUpEnabled(true);
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
 
         val type = intent.extras.get(INTENT_KEY) as String

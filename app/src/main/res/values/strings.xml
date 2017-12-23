@@ -6,6 +6,7 @@
     <string name="hello_world">Hello world!</string>
 
     <string name="new_record_title">Add New Spending</string>
+    <string name="view_history_title">View History</string>
     <string name="new_record_btn">Add Spending</string>
     <string name="amount_hint">Amount</string>
     <string name="type_hint">Type</string>
@@ -15,6 +16,7 @@
     <string name="weekly_label">Weekly expense</string>
     <string name="monthly_label">Monthly expense</string>
     <string name="balance_label">Balance</string>
+    <string name="info_empty_history">No history found</string>
     <!-- -
         This is an ad unit ID for a banner test ad. Replace with your own banner ad unit id.
         For more information, see https://support.google.com/admob/answer/3052638

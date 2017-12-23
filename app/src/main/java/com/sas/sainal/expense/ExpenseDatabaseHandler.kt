@@ -48,7 +48,11 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val ERROR_EXIST = -3L
         val SQL_ERROR: Long = -1
 
-        val SPECIAL_TYPE_INCOME = "income"
+        val SPECIAL_TYPE_INCOME = "Income"
+        val TYPE_SHOPPING = "Shopping"
+        val TYPE_CLOTHING = "Clothing"
+        val TYPE_GROCERY = "Grocery"
+        val TYPE_OTHER = "Others"
     }
 
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {
@@ -183,7 +187,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
             }
         }
         //return error if the cursor was null
-        return SQL_ERROR as Double
+        return SQL_ERROR.toDouble()
     }
 
     fun getPeriodSpendRecord(period: Period): List<SpendRecord>? {
@@ -331,6 +335,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
                 return cursor.getString(0).toDouble()
             }
         }
+        cursor.close()
         return SQL_ERROR.toDouble()
     }
 
@@ -395,6 +400,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
                 return alc
             }
+            c.close()
             return alc
         } catch (sqlEx: SQLException) {
             Log.d("printing exception", sqlEx.toString())

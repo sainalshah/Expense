@@ -18,7 +18,6 @@ class MainActivity : AppCompatActivity() {
 
 
     private var recList: RecyclerView? = null
-    private var balanceCard: RecyclerView? = null
     val DEBUG_TAG = "MainActivityTag"
     private var databaseHandler: ExpenseDatabaseHandler? = null
 
@@ -30,8 +29,8 @@ class MainActivity : AppCompatActivity() {
             override fun doInBackground(vararg params: Any): Array<Double> {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
                 val weeklyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
-                val monthlyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
-                val balance = databaseHandler!!.getBalance()
+                val monthlyAmt = databaseHandler.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
+                val balance = databaseHandler.getBalance()
                 return arrayOf(weeklyAmt, monthlyAmt,balance)
             }
 
@@ -48,7 +47,7 @@ class MainActivity : AppCompatActivity() {
                         SummaryInfo(activityReference!!.get()!!.getString(R.string.monthly_label), monthly),
                         SummaryInfo(activityReference!!.get()!!.getString(R.string.balance_label), balance)),
                         activityReference?.get()!!)
-                activityReference?.get()?.runOnUiThread(Runnable {
+                activityReference?.get()?.runOnUiThread({
                     activityReference?.get()?.recList?.adapter = summaryAdapter
                 })
             }
@@ -63,7 +62,7 @@ class MainActivity : AppCompatActivity() {
                 if (databaseHandler?.getTypeId(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
                         == ExpenseDatabaseHandler.ERROR_NOT_EXIST) {
                     for (type in params) {
-                        databaseHandler?.addSpendType(type)
+                        databaseHandler.addSpendType(type)
                     }
                 }
             }
@@ -123,14 +122,19 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         val id = item.itemId
 
-        when (id) {
-            R.id.action_settings -> return true
+        return when (id) {
+            R.id.action_settings -> true
             R.id.db_manager -> {
                 val dbmanager = Intent(this@MainActivity, AndroidDatabaseManager::class.java)
                 startActivity(dbmanager)
-                return true
+                true
             }
-            else -> return super.onOptionsItemSelected(item)
+            R.id.view_history ->{
+                val viewHistory = Intent(this@MainActivity, ViewHistory::class.java)
+                startActivity(viewHistory)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -141,11 +145,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupDB() {
 
-        val type1 = "shopping"
-        val type2 = "clothing"
-        val type3 = "grocery"
 
-        SetupDB(this).execute(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME, type1, type2, type3)
+        SetupDB(this).execute(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME,
+                ExpenseDatabaseHandler.TYPE_SHOPPING, ExpenseDatabaseHandler.TYPE_CLOTHING,
+                ExpenseDatabaseHandler.TYPE_GROCERY, ExpenseDatabaseHandler.TYPE_OTHER)
 
     }
 

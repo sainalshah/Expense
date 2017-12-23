@@ -27,13 +27,22 @@
         </activity> <!-- Include the AdActivity configChanges and theme. -->
 
         <!--<activity-->
-            <!--android:name=".NewRecordActivity"-->
-            <!--android:label="@string/new_record_title"-->
-            <!--android:parentActivityName=".MainActivity"-->
-            <!--android:theme="@style/DialogTheme">-->
+        <!--android:name=".NewRecordActivity"-->
+        <!--android:label="@string/new_record_title"-->
+        <!--android:parentActivityName=".MainActivity"-->
+        <!--android:theme="@style/DialogTheme">-->
         <activity
             android:name=".NewRecordActivity"
             android:label="@string/new_record_title"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+        <activity
+            android:name=".ViewHistory"
+            android:label="@string/view_history_title"
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
