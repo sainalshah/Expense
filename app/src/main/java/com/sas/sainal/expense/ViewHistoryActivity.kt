@@ -7,42 +7,67 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
+import com.hudomju.swipe.OnItemClickListener
+import com.hudomju.swipe.SwipeToDismissTouchListener
+import com.hudomju.swipe.SwipeableItemClickListener
+import com.hudomju.swipe.adapter.RecyclerViewAdapter
 import java.lang.ref.WeakReference
 
 
 class ViewHistoryActivity : AppCompatActivity() {
 
 
+    private val TIME_TO_AUTOMATICALLY_DISMISS_ITEM = 3000
     private var recList: RecyclerView? = null
     val DEBUG_TAG = "ViewHistoryTag"
     private var databaseHandler: ExpenseDatabaseHandler? = null
+    var adapter: HistoryAdapter? = null
 
     companion object {
 
-        class ShowHistory(context: ViewHistoryActivity) : AsyncTask<Any, Any, List<SpendRecord>?>() {
+        class DbHistoryAsyncAdapter(context: ViewHistoryActivity) : AsyncTask<String, Any, Any>() {
+
             private var activityReference: WeakReference<ViewHistoryActivity>? = WeakReference(context)
-            override fun doInBackground(vararg params: Any): List<SpendRecord>? {
+
+            companion object {
+
+                enum class Action {
+                    ShowAll, Delete
+                }
+
+                var action: Action = Action.ShowAll
+                fun showAllRecord(context: ViewHistoryActivity) {
+                    action = Action.ShowAll
+                    DbHistoryAsyncAdapter(context).execute()
+                }
+
+                fun deleteRecord(context: ViewHistoryActivity, id: Long) {
+                    action = Action.Delete
+                    DbHistoryAsyncAdapter(context).execute(id.toString())
+                }
+            }
+
+            override fun doInBackground(vararg params: String) {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
-                return databaseHandler!!.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.ALL)
+                if (action == Action.ShowAll) {
+                    init(databaseHandler!!.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.ALL))
+                } else {
+                    databaseHandler!!.deleteSpendRecord(params[0].toLong())
+                }
             }
 
-            override fun onPostExecute(result: List<SpendRecord>?) {
-                updateRecyclerView(result)
-            }
+            private fun init(listSR: List<SpendRecord>?) {
+                val recyclerView = activityReference?.get()?.recList
 
-            private fun updateRecyclerView(listSR: List<SpendRecord>?) {
                 if (listSR != null) {
-                    val historyAdapter = HistoryAdapter(listSR)
                     activityReference?.get()?.runOnUiThread({
-                        activityReference?.get()?.recList?.adapter = historyAdapter
-                        activityReference?.get()?.findViewById<TextView>(R.id.history_empty_txt_iew)?.visibility = View.GONE
-                        activityReference?.get()?.findViewById<RecyclerView>(R.id.historyCardList)?.visibility = View.VISIBLE
-                        Log.v(activityReference?.get()?.DEBUG_TAG,"populating recyclerview")
+                        activityReference?.get()?.adapter = HistoryAdapter(listSR)
+                        recyclerView?.adapter = activityReference?.get()?.adapter
                     })
                 } else {
                     activityReference?.get()?.runOnUiThread({
@@ -69,11 +94,51 @@ class ViewHistoryActivity : AppCompatActivity() {
         databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
 
         recList = findViewById<View>(R.id.historyCardList) as RecyclerView
-        recList?.setHasFixedSize(true)
-        val llm = LinearLayoutManager(this)
-        llm.orientation = LinearLayoutManager.VERTICAL
-        recList?.layoutManager = llm
 
+        setupView()
+    }
+
+    private fun setupView() {
+        val mLayoutManager = LinearLayoutManager(this)
+        recList?.layoutManager = mLayoutManager
+        val touchListener = SwipeToDismissTouchListener(
+                RecyclerViewAdapter(recList),
+                object : SwipeToDismissTouchListener.DismissCallbacks<RecyclerViewAdapter> {
+                    override fun canDismiss(position: Int): Boolean {
+                        return true
+                    }
+
+                    override fun onPendingDismiss(recList: RecyclerViewAdapter, position: Int) {
+
+                    }
+
+                    override fun onDismiss(view: RecyclerViewAdapter, position: Int) {
+                        val id = adapter?.remove(position)
+                        DbHistoryAsyncAdapter.deleteRecord(this@ViewHistoryActivity, id!!)
+                    }
+                })
+        touchListener.setDismissDelay(TIME_TO_AUTOMATICALLY_DISMISS_ITEM.toLong())
+        recList?.setOnTouchListener(touchListener)
+        // Setting this scroll listener is required to ensure that during ListView scrolling,
+        // we don't look for swipes.
+        recList?.setOnScrollListener(touchListener.makeScrollListener() as RecyclerView.OnScrollListener)
+        recList?.addOnItemTouchListener(SwipeableItemClickListener(this,
+                OnItemClickListener { view, position ->
+                    when {
+                        view.id == R.id.txt_delete -> touchListener.processPendingDismisses()
+                        view.id == R.id.txt_undo -> touchListener.undoPendingDismiss()
+                        else -> {
+
+                            val intent = Intent(this, NewRecordActivity::class.java).putExtra(NewRecordActivity.INTENT_ACTION_KEY, NewRecordActivity.TYPE_EDIT_SPENDING)
+                                    .putExtra(NewRecordActivity.TYPE_SPENDING_OBJECT, adapter?.getItem(position))
+                            startActivity(intent)
+                        }
+                    }
+                }))
+    }
+
+    override fun onResume() {
+        super.onResume()
         updateHistoryPage()
     }
 
@@ -110,7 +175,7 @@ class ViewHistoryActivity : AppCompatActivity() {
     }
 
     private fun updateHistoryPage() {
-        ShowHistory(this).execute()
+        DbHistoryAsyncAdapter.showAllRecord(this)
     }
 
 

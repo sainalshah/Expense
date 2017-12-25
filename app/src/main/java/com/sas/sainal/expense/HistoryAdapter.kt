@@ -13,15 +13,21 @@ import android.widget.TextView
 
 class HistoryAdapter(private val historyList: List<SpendRecord>) : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
+    private var mDataSet:MutableList<SpendRecord>? = null
+    init{
+        mDataSet = historyList.toMutableList()
+    }
     override fun getItemCount(): Int {
-        return historyList.size
+        return mDataSet!!.size
     }
 
     override fun onBindViewHolder(historyViewHolder: HistoryViewHolder, i: Int) {
-        val historyItem = historyList[i]
-        historyViewHolder.type.text = historyItem.type
-        historyViewHolder.amount.text = historyItem.amount.toString()
-        historyViewHolder.date.text = historyItem.date
+        if(i<mDataSet!!.size) {
+            val historyItem = mDataSet!![i]
+            historyViewHolder.type.text = historyItem.type
+            historyViewHolder.amount.text = historyItem.amount.toString()
+            historyViewHolder.date.text = historyItem.date
+        }
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): HistoryViewHolder {
@@ -30,6 +36,16 @@ class HistoryAdapter(private val historyList: List<SpendRecord>) : RecyclerView.
         return HistoryViewHolder(itemView)
     }
 
+    fun remove(position: Int) :Long{
+        val id = mDataSet?.get(position)?.id!!
+        mDataSet?.removeAt(position)
+        notifyItemRemoved(position)
+        return  id
+    }
+
+    fun getItem(position: Int):SpendRecord{
+        return mDataSet?.get(position)!!
+    }
 
     class HistoryViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         val type: TextView = v.findViewById(R.id.history_type)

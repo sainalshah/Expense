@@ -11,10 +11,13 @@
     <string name="new_record_btn">Add spending</string>
     <string name="amount_hint">Amount</string>
     <string name="comment_hint">Optional comment</string>
+    <string name="deleted">Deleted</string>
+    <string name="undo">UNDO</string>
     <string name="type_hint">Type</string>
 
     <string name="amount_empty_error">Please enter an amount</string>
     <string name="add_income_text">Add Income</string>
+    <string name="edit_spending_text">Edit Income</string>
     <string name="weekly_label">Weekly expense</string>
     <string name="monthly_label">Monthly expense</string>
     <string name="balance_label">Balance</string>

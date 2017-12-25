@@ -29,7 +29,7 @@ class SummaryAdapter(private val summaryList: List<SummaryInfo>, private val con
         }
         summaryViewHolder.addIncome.setOnClickListener {
             // Click action
-            val intent = Intent(context, NewRecordActivity::class.java).putExtra(NewRecordActivity.INTENT_KEY, NewRecordActivity.TYPE_INCOME)
+            val intent = Intent(context, NewRecordActivity::class.java).putExtra(NewRecordActivity.INTENT_ACTION_KEY, NewRecordActivity.TYPE_INCOME)
             context.startActivity(intent)
         }
     }

@@ -17,19 +17,32 @@ class NewRecordActivity : AppCompatActivity() {
 
     private var typeField: Spinner? = null
     private var amountField: EditText? = null
+    private var addBtn: Button? = null
 
+    private var record: SpendRecord? = null
     companion object {
         val DEBUG_TAG = "NewRecordActivityTag"
-        val INTENT_KEY = "spending"
+        val INTENT_ACTION_KEY = "spending"
         val TYPE_SPENDING = "Spending"
         val TYPE_INCOME = "Balance"
 
+        val TYPE_EDIT_SPENDING = "Edit"
+        val TYPE_SPENDING_OBJECT = "Spending_object"
+
         class PopulateTypeField(context: NewRecordActivity) : AsyncTask<String, Any, Array<String>?>() {
+
+            private var record: SpendRecord? = null
+
+            constructor(context: NewRecordActivity, record: SpendRecord) : this(context) {
+                this.record = record
+            }
+
+
             private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
             override fun doInBackground(vararg params: String): Array<String>? {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
 
-                return if (params[0] == NewRecordActivity.TYPE_SPENDING) {
+                return if (params[0] == TYPE_SPENDING || params[0] == TYPE_EDIT_SPENDING) {
                     databaseHandler?.getAllSpendType()?.toTypedArray()
                 } else {
                     arrayOf(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
@@ -42,26 +55,64 @@ class NewRecordActivity : AppCompatActivity() {
 
             private fun populateTypeField(items: Array<String>?) {
                 activityReference?.get()?.runOnUiThread({
-                    val dynamicSpinner = activityReference?.get()?.findViewById<Spinner>(R.id.record_type_field)
+                    val dynamicSpinner = activityReference?.get()?.typeField
+                    val amtField = activityReference?.get()?.amountField
 
 
                     val adapter = ArrayAdapter(activityReference?.get()?.application,
                             android.R.layout.simple_spinner_item, items)
 
                     dynamicSpinner?.adapter = adapter
+                    if (record != null) {
+                        activityReference?.get()?.record = record
+                        dynamicSpinner?.setSelection(getStringPosition(items!!, record!!.type))
+                        amtField?.setText(record!!.amount.toString())
+                    }
                 })
 
+            }
+
+            private fun getStringPosition(typeValues: Array<String>, item: String): Int {
+                val n = typeValues.size
+                for (i in 0 until n) {
+                    val value = typeValues[i]
+                    if (value == item)
+                        return i
+                }
+                return -1
             }
         }
 
         class AddNewRecord(context: NewRecordActivity) : AsyncTask<String, Any, Any>() {
             private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
+
+            enum class Action {
+                Add, Edit
+            }
+
+            companion object {
+                private var action = AddNewRecord.Action.Add
+                fun addRecord(context: NewRecordActivity, type: String, amt: String, date: String) {
+                    action = AddNewRecord.Action.Add
+                    AddNewRecord(context).execute(type, amt, date)
+                }
+
+                fun editRecord(context: NewRecordActivity, id: String, type: String, amt: String, date: String) {
+                    action = AddNewRecord.Action.Edit
+                    AddNewRecord(context).execute(id, type, amt, date)
+                }
+            }
+
             override fun doInBackground(vararg params: String) {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
 
-
-                val newRecord = SpendRecord(params[0], params[1].toDouble(), Datetime().getCurrentDatetime())
-                databaseHandler?.addSpendRecord(newRecord)
+                if (action == Action.Add) {
+                    val newRecord = SpendRecord(params[0], params[1].toDouble(), Datetime().getCurrentDatetime())
+                    databaseHandler?.addSpendRecord(newRecord)
+                } else {
+                    val newRecord = SpendRecord(params[0].toLong(), params[1], params[2].toDouble(), Datetime().getCurrentDatetime())
+                    databaseHandler?.updateSpendRecord(newRecord)
+                }
             }
 
             override fun onPostExecute(result: Any) {
@@ -78,20 +129,33 @@ class NewRecordActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         databaseHandler = ExpenseDatabaseHandler(this.applicationContext)
 
-        val type = intent.extras.get(INTENT_KEY) as String
-        PopulateTypeField(this).execute(type)
+        val type = intent.extras.get(INTENT_ACTION_KEY) as String
 
         typeField = findViewById(R.id.record_type_field)
         amountField = findViewById(R.id.record_amount_field)
-        val addBtn = findViewById<Button>(R.id.add_record_btn)
-        if (type == TYPE_INCOME) {
-            val label = getText(R.string.add_income_text)
-            addBtn.text = label
-            title = label
-        }
-        addBtn.setOnClickListener {
+        addBtn = findViewById(R.id.add_record_btn)
+        val tempAddBtn = addBtn as Button
+        when (type) {
+            TYPE_INCOME -> {
+                val label = getText(R.string.add_income_text)
+                tempAddBtn.text = label
+                title = label
+                PopulateTypeField(this).execute(type)
+            }
+            TYPE_EDIT_SPENDING -> {
+                val label = getText(R.string.edit_spending_text)
+                tempAddBtn.text = label
+                title = label
 
-            addNewRecord()
+                val record: SpendRecord = intent.extras.getParcelable(TYPE_SPENDING_OBJECT)
+                PopulateTypeField(this, record).execute(type)
+            }
+            else -> //populate all type
+                PopulateTypeField(this).execute(type)
+        }
+        tempAddBtn.setOnClickListener {
+
+            doAction()
         }
     }
 
@@ -99,11 +163,16 @@ class NewRecordActivity : AppCompatActivity() {
         return databaseHandler
     }
 
-    private fun addNewRecord() {
+
+    private fun doAction() {
         val type = typeField?.selectedItem.toString()
         val amtTxt = amountField?.text.toString()
         if (amtTxt.isNotEmpty()) {
-            AddNewRecord(this).execute(type, amtTxt)
+            if (addBtn?.text == getText(R.string.edit_spending_text)) {
+                AddNewRecord.editRecord(this, record?.id.toString(),type, amtTxt, Datetime().getCurrentDatetime())
+            } else {
+                AddNewRecord.addRecord(this, type, amtTxt, Datetime().getCurrentDatetime())
+            }
         } else {
             Toast.makeText(applicationContext, R.string.amount_empty_error, Toast.LENGTH_LONG).show()
         }

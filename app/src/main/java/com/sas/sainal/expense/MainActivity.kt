@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         fab.setOnClickListener {
             // Click action
             val intent = Intent(this@MainActivity,
-                    NewRecordActivity::class.java).putExtra(NewRecordActivity.INTENT_KEY, NewRecordActivity.TYPE_SPENDING)
+                    NewRecordActivity::class.java).putExtra(NewRecordActivity.INTENT_ACTION_KEY, NewRecordActivity.TYPE_SPENDING)
             startActivity(intent)
         }
 
