@@ -43,9 +43,9 @@ class MainActivity : AppCompatActivity() {
                 val monthly = String.format(amountFormat, monthlyAmount)
                 val balance = String.format(amountFormat, balanceAmount)
                 val summaryAdapter = SummaryAdapter(listOf(
-                        SummaryInfo(activityReference!!.get()!!.getString(R.string.weekly_label), weekly),
-                        SummaryInfo(activityReference!!.get()!!.getString(R.string.monthly_label), monthly),
-                        SummaryInfo(activityReference!!.get()!!.getString(R.string.balance_label), balance)),
+                        SummaryAdapter.SummaryInfo(activityReference!!.get()!!.getString(R.string.weekly_label), weekly),
+                        SummaryAdapter.SummaryInfo(activityReference!!.get()!!.getString(R.string.monthly_label), monthly),
+                        SummaryAdapter.SummaryInfo(activityReference!!.get()!!.getString(R.string.balance_label), balance)),
                         activityReference?.get()!!)
                 activityReference?.get()?.runOnUiThread({
                     activityReference?.get()?.recList?.adapter = summaryAdapter
@@ -123,14 +123,18 @@ class MainActivity : AppCompatActivity() {
         val id = item.itemId
 
         return when (id) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                val settings = Intent(this@MainActivity, ViewSettingsActivity::class.java)
+                startActivity(settings)
+                true
+            }
             R.id.db_manager -> {
                 val dbmanager = Intent(this@MainActivity, AndroidDatabaseManager::class.java)
                 startActivity(dbmanager)
                 true
             }
             R.id.view_history ->{
-                val viewHistory = Intent(this@MainActivity, ViewHistory::class.java)
+                val viewHistory = Intent(this@MainActivity, ViewHistoryActivity::class.java)
                 startActivity(viewHistory)
                 true
             }

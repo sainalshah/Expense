@@ -41,8 +41,17 @@
                 android:value=".MainActivity" />
         </activity>
         <activity
-            android:name=".ViewHistory"
+            android:name=".ViewHistoryActivity"
             android:label="@string/view_history_title"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+        <activity
+            android:name=".ViewSettingsActivity"
+            android:label="@string/view_settings_title"
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data

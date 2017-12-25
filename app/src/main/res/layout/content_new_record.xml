@@ -16,27 +16,34 @@
 
     <Spinner
         android:id="@+id/record_type_field"
-        android:layout_width="wrap_content"
+        android:layout_marginVertical="@dimen/activity_vertical_margin"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:hint="@string/type_hint"/>
 
     <EditText
         android:id="@+id/record_amount_field"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/record_type_field"
-        android:layout_centerHorizontal="true"
         android:inputType="numberDecimal"
         android:hint="@string/amount_hint"/>
 
-
+    <EditText
+        android:id="@+id/record_comment_field"
+        android:layout_marginVertical="@dimen/activity_vertical_margin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/record_amount_field"
+        android:inputType="textImeMultiLine"
+        android:hint="@string/comment_hint"/>
     <Button
         android:id="@+id/add_record_btn"
+        android:layout_marginVertical="@dimen/activity_vertical_margin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:text="@string/new_record_btn" />
+        android:text="@string/new_record_btn"
+        android:layout_below="@+id/record_comment_field"/>
 
 </RelativeLayout>

@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -14,7 +15,7 @@ import android.widget.TextView
 import java.lang.ref.WeakReference
 
 
-class ViewHistory : AppCompatActivity() {
+class ViewHistoryActivity : AppCompatActivity() {
 
 
     private var recList: RecyclerView? = null
@@ -23,8 +24,8 @@ class ViewHistory : AppCompatActivity() {
 
     companion object {
 
-        class ShowHistory(context: ViewHistory) : AsyncTask<Any, Any, List<SpendRecord>?>() {
-            private var activityReference: WeakReference<ViewHistory>? = WeakReference(context)
+        class ShowHistory(context: ViewHistoryActivity) : AsyncTask<Any, Any, List<SpendRecord>?>() {
+            private var activityReference: WeakReference<ViewHistoryActivity>? = WeakReference(context)
             override fun doInBackground(vararg params: Any): List<SpendRecord>? {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
                 return databaseHandler!!.getPeriodSpendRecord(ExpenseDatabaseHandler.Period.ALL)
@@ -40,6 +41,13 @@ class ViewHistory : AppCompatActivity() {
                     activityReference?.get()?.runOnUiThread({
                         activityReference?.get()?.recList?.adapter = historyAdapter
                         activityReference?.get()?.findViewById<TextView>(R.id.history_empty_txt_iew)?.visibility = View.GONE
+                        activityReference?.get()?.findViewById<RecyclerView>(R.id.historyCardList)?.visibility = View.VISIBLE
+                        Log.v(activityReference?.get()?.DEBUG_TAG,"populating recyclerview")
+                    })
+                } else {
+                    activityReference?.get()?.runOnUiThread({
+                        activityReference?.get()?.findViewById<RecyclerView>(R.id.historyCardList)?.visibility = View.GONE
+                        activityReference?.get()?.findViewById<TextView>(R.id.history_empty_txt_iew)?.visibility = View.VISIBLE
                     })
                 }
             }
@@ -66,7 +74,7 @@ class ViewHistory : AppCompatActivity() {
         llm.orientation = LinearLayoutManager.VERTICAL
         recList?.layoutManager = llm
 
-        updateHomePage()
+        updateHistoryPage()
     }
 
     override fun onDestroy() {
@@ -87,9 +95,13 @@ class ViewHistory : AppCompatActivity() {
         val id = item.itemId
 
         return when (id) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                val settings = Intent(this@ViewHistoryActivity, ViewSettingsActivity::class.java)
+                startActivity(settings)
+                true
+            }
             R.id.db_manager -> {
-                val dbmanager = Intent(this@ViewHistory, AndroidDatabaseManager::class.java)
+                val dbmanager = Intent(this@ViewHistoryActivity, AndroidDatabaseManager::class.java)
                 startActivity(dbmanager)
                 true
             }
@@ -97,7 +109,7 @@ class ViewHistory : AppCompatActivity() {
         }
     }
 
-    private fun updateHomePage() {
+    private fun updateHistoryPage() {
         ShowHistory(this).execute()
     }
 

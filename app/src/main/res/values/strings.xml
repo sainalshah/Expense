@@ -5,10 +5,12 @@
 
     <string name="hello_world">Hello world!</string>
 
-    <string name="new_record_title">Add New Spending</string>
-    <string name="view_history_title">View History</string>
-    <string name="new_record_btn">Add Spending</string>
+    <string name="new_record_title">Add new spending</string>
+    <string name="view_history_title">History</string>
+    <string name="view_settings_title">Settings</string>
+    <string name="new_record_btn">Add spending</string>
     <string name="amount_hint">Amount</string>
+    <string name="comment_hint">Optional comment</string>
     <string name="type_hint">Type</string>
 
     <string name="amount_empty_error">Please enter an amount</string>
@@ -17,6 +19,9 @@
     <string name="monthly_label">Monthly expense</string>
     <string name="balance_label">Balance</string>
     <string name="info_empty_history">No history found</string>
+    <string name="new_type_title">Add new type</string>
+    <string name="cancel">Cancel</string>
+    <string name="add">Add</string>
     <!-- -
         This is an ad unit ID for a banner test ad. Replace with your own banner ad unit id.
         For more information, see https://support.google.com/admob/answer/3052638
