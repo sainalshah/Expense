@@ -17,6 +17,7 @@ class NewRecordActivity : AppCompatActivity() {
 
     private var typeField: Spinner? = null
     private var amountField: EditText? = null
+    private var commentField: EditText? = null
     private var addBtn: Button? = null
 
     private var record: SpendRecord? = null
@@ -57,6 +58,7 @@ class NewRecordActivity : AppCompatActivity() {
                 activityReference?.get()?.runOnUiThread({
                     val dynamicSpinner = activityReference?.get()?.typeField
                     val amtField = activityReference?.get()?.amountField
+                    val commentField = activityReference?.get()?.commentField
 
 
                     val adapter = ArrayAdapter(activityReference?.get()?.application,
@@ -67,6 +69,7 @@ class NewRecordActivity : AppCompatActivity() {
                         activityReference?.get()?.record = record
                         dynamicSpinner?.setSelection(getStringPosition(items!!, record!!.type))
                         amtField?.setText(record!!.amount.toString())
+                        commentField?.setText(record!!.comment)
                     }
                 })
 
@@ -92,14 +95,14 @@ class NewRecordActivity : AppCompatActivity() {
 
             companion object {
                 private var action = AddNewRecord.Action.Add
-                fun addRecord(context: NewRecordActivity, type: String, amt: String, date: String) {
+                fun addRecord(context: NewRecordActivity, type: String, amt: String, date: String,comment:String) {
                     action = AddNewRecord.Action.Add
-                    AddNewRecord(context).execute(type, amt, date)
+                    AddNewRecord(context).execute(type, amt, date,comment)
                 }
 
-                fun editRecord(context: NewRecordActivity, id: String, type: String, amt: String, date: String) {
+                fun editRecord(context: NewRecordActivity, id: String, type: String, amt: String, date: String,comment:String) {
                     action = AddNewRecord.Action.Edit
-                    AddNewRecord(context).execute(id, type, amt, date)
+                    AddNewRecord(context).execute(id, type, amt, date,comment)
                 }
             }
 
@@ -107,10 +110,10 @@ class NewRecordActivity : AppCompatActivity() {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
 
                 if (action == Action.Add) {
-                    val newRecord = SpendRecord(params[0], params[1].toDouble(), Datetime().getCurrentDatetime())
+                    val newRecord = SpendRecord(params[0], params[1].toDouble(), params[2], params[3])
                     databaseHandler?.addSpendRecord(newRecord)
                 } else {
-                    val newRecord = SpendRecord(params[0].toLong(), params[1], params[2].toDouble(), Datetime().getCurrentDatetime())
+                    val newRecord = SpendRecord(params[0].toLong(), params[1], params[2].toDouble(), params[3], params[4])
                     databaseHandler?.updateSpendRecord(newRecord)
                 }
             }
@@ -133,6 +136,7 @@ class NewRecordActivity : AppCompatActivity() {
 
         typeField = findViewById(R.id.record_type_field)
         amountField = findViewById(R.id.record_amount_field)
+        commentField = findViewById(R.id.record_comment_field)
         addBtn = findViewById(R.id.add_record_btn)
         val tempAddBtn = addBtn as Button
         when (type) {
@@ -167,11 +171,12 @@ class NewRecordActivity : AppCompatActivity() {
     private fun doAction() {
         val type = typeField?.selectedItem.toString()
         val amtTxt = amountField?.text.toString()
+        val commentTxt = commentField?.text.toString()
         if (amtTxt.isNotEmpty()) {
             if (addBtn?.text == getText(R.string.edit_spending_text)) {
-                AddNewRecord.editRecord(this, record?.id.toString(),type, amtTxt, Datetime().getCurrentDatetime())
+                AddNewRecord.editRecord(this, record?.id.toString(),type, amtTxt, Datetime().getCurrentDatetime(),commentTxt)
             } else {
-                AddNewRecord.addRecord(this, type, amtTxt, Datetime().getCurrentDatetime())
+                AddNewRecord.addRecord(this, type, amtTxt, Datetime().getCurrentDatetime(),commentTxt)
             }
         } else {
             Toast.makeText(applicationContext, R.string.amount_empty_error, Toast.LENGTH_LONG).show()

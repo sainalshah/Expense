@@ -32,7 +32,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     enum class Key {
         //Records table attribute keys
         RECORD_ID,
-        RECORD_TYPE, RECORD_AMOUNT, RECORD_DATE,
+        RECORD_TYPE, RECORD_AMOUNT, RECORD_DATE, RECORD_COMMENT,
 
         //Type table attribute keys
         TYPE_ID,
@@ -41,7 +41,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
     // Kotlin does not allow static variables or functions
     companion object {
-        val DATABASE_NAME = "expense_db"
+        val DATABASE_NAME = "expense_test_db"
         val DATABASE_VERSION = 1
 
         val ERROR_NOT_EXIST = -2L
@@ -70,7 +70,8 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
                 Key.RECORD_ID.name + " INTEGER PRIMARY KEY," +
                 Key.RECORD_TYPE.name + " INTEGER," +
                 Key.RECORD_AMOUNT.name + " DECIMAL(10, 5)," +
-                Key.RECORD_DATE.name + " REAL," +
+                Key.RECORD_DATE.name + " TEXT," +
+                Key.RECORD_COMMENT.name + " TEXT," +
                 "FOREIGN KEY(" + Key.RECORD_TYPE.name + ") REFERENCES " + Table.TYPE.name + " (" + Key.TYPE_ID.name + ")" +
                 ")"
         sqLiteDatabase.execSQL("PRAGMA foreign_keys = ON")
@@ -104,6 +105,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
             values.put(Key.RECORD_TYPE.name, typeId) // SpendRecord Title
             values.put(Key.RECORD_AMOUNT.name, record.amount) // SpendRecord Content
             values.put(Key.RECORD_DATE.name, record.date)
+            values.put(Key.RECORD_COMMENT.name, record.comment)
             // Inserting new row into records table
             return db.insert(Table.RECORD.name, null, values)
         }
@@ -114,11 +116,11 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     // Get Single SpendRecord
     fun getSpendRecord(id: Long): SpendRecord? {
         val db = this.readableDatabase
-        var record: SpendRecord? = null
 
         // SQL query for getting a record from the database
         val selectQuery = """SELECT T1.${Key.RECORD_ID.name}, T2.${Key.TYPE_NAME.name},
-                T1.${Key.RECORD_AMOUNT.name},T1.${Key.RECORD_DATE.name} FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
+                T1.${Key.RECORD_AMOUNT.name},T1.${Key.RECORD_DATE.name},T1.${Key.RECORD_COMMENT.name}
+                FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
                 WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name} AND T1.${Key.RECORD_ID.name}=$id"""
 
 
@@ -127,17 +129,12 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
         cursor.let {
             if (cursor.moveToFirst()) {
-                record = SpendRecord(
-                        cursor.getString(0).toLong(),
-                        cursor.getString(1),
-                        cursor.getString(2).toDouble(),
-                        cursor.getString(3)
-                )
+                return constructSpendRecord(cursor)
             }
         }
         cursor.close()
         // return record
-        return record
+        return null
     }
 
     // Get All SpendRecords
@@ -192,17 +189,12 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
     fun getPeriodSpendRecord(period: Period): List<SpendRecord>? {
         val cursor = getSpendRecords(period, listOf(Key.RECORD_ID.name, Key.TYPE_NAME.name,
-                Key.RECORD_AMOUNT.name, Key.RECORD_DATE.name))
+                Key.RECORD_AMOUNT.name, Key.RECORD_DATE.name, Key.RECORD_COMMENT.name))
         cursor.let {
             if (cursor!!.moveToFirst()) {
                 val recordList = arrayListOf<SpendRecord>()
                 do {
-                    val record = SpendRecord(
-                            cursor.getString(0).toLong(),
-                            cursor.getString(1),
-                            cursor.getString(2).toDouble(),
-                            cursor.getString(3)
-                    )
+                    val record = constructSpendRecord(cursor)
                     // Adding SpendRecord to list
                     recordList.add(record)
                 } while (cursor.moveToNext())
@@ -216,6 +208,15 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         return null
     }
 
+    private fun constructSpendRecord(cursor:Cursor):SpendRecord{
+        return SpendRecord(
+                cursor.getString(0).toLong(),
+                cursor.getString(1),
+                cursor.getString(2).toDouble(),
+                cursor.getString(3),
+                cursor.getString(4) ?:""
+        )
+    }
     // Updating single record
     fun updateSpendRecord(record: SpendRecord): Long {
         if (record.id != null && typeExists(record.type)) {

@@ -25,7 +25,7 @@ class HistoryAdapter(private val historyList: List<SpendRecord>) : RecyclerView.
         if(i<mDataSet!!.size) {
             val historyItem = mDataSet!![i]
             historyViewHolder.type.text = historyItem.type
-            historyViewHolder.amount.text = historyItem.amount.toString()
+            historyViewHolder.amount.text = historyItem.getAmount()
             historyViewHolder.date.text = historyItem.date
         }
     }
