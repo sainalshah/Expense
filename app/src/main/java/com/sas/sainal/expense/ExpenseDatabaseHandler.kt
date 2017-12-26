@@ -222,7 +222,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         if (record.id != null && typeExists(record.type)) {
             val db = this.writableDatabase
             val updateSql = """UPDATE ${Table.RECORD.name} SET ${Key.RECORD_TYPE}='${getTypeId(record.type)}',
-                |${Key.RECORD_AMOUNT}=${record.amount}, ${Key.RECORD_DATE}='${record.date}'
+                |${Key.RECORD_AMOUNT}=${record.amount}, ${Key.RECORD_DATE}='${record.date}', ${Key.RECORD_COMMENT}='${record.comment}'
                 |WHERE ${Key.RECORD_ID}=${record.id}""".trimMargin()
 
             db.execSQL(updateSql)

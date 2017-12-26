@@ -13,20 +13,26 @@ import android.widget.TextView
 
 class HistoryAdapter(private val historyList: List<SpendRecord>) : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
-    private var mDataSet:MutableList<SpendRecord>? = null
-    init{
+    private var mDataSet: MutableList<SpendRecord>? = null
+
+    init {
         mDataSet = historyList.toMutableList()
     }
+
     override fun getItemCount(): Int {
         return mDataSet!!.size
     }
 
     override fun onBindViewHolder(historyViewHolder: HistoryViewHolder, i: Int) {
-        if(i<mDataSet!!.size) {
+        if (i < mDataSet!!.size) {
             val historyItem = mDataSet!![i]
             historyViewHolder.type.text = historyItem.type
             historyViewHolder.amount.text = historyItem.getAmount()
             historyViewHolder.date.text = historyItem.date
+            if (historyItem.comment.isNotEmpty()) {
+                historyViewHolder.comment.text = historyItem.comment
+                historyViewHolder.comment.visibility = View.VISIBLE
+            }
         }
     }
 
@@ -36,14 +42,14 @@ class HistoryAdapter(private val historyList: List<SpendRecord>) : RecyclerView.
         return HistoryViewHolder(itemView)
     }
 
-    fun remove(position: Int) :Long{
+    fun remove(position: Int): Long {
         val id = mDataSet?.get(position)?.id!!
         mDataSet?.removeAt(position)
         notifyItemRemoved(position)
-        return  id
+        return id
     }
 
-    fun getItem(position: Int):SpendRecord{
+    fun getItem(position: Int): SpendRecord {
         return mDataSet?.get(position)!!
     }
 
@@ -51,5 +57,6 @@ class HistoryAdapter(private val historyList: List<SpendRecord>) : RecyclerView.
         val type: TextView = v.findViewById(R.id.history_type)
         val amount: TextView = v.findViewById(R.id.history_amount)
         val date: TextView = v.findViewById(R.id.history_date)
+        val comment: TextView = v.findViewById(R.id.history_comment)
     }
 }
