@@ -8,9 +8,23 @@
     android:layout_margin="3dp"
     card_view:cardCornerRadius="4dp">
 
-    <TextView
-        android:id="@+id/menu_item"
-        android:layout_width="wrap_content"
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/settings_title"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="25sp" />
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:gravity="center_vertical"
+        android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall" />
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/settings_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall"
+        android:gravity="center_vertical"
+        android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall"
+        android:textSize="15sp"/>
 </android.support.v7.widget.CardView>

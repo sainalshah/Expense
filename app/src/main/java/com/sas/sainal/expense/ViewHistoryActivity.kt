@@ -62,17 +62,18 @@ class ViewHistoryActivity : AppCompatActivity() {
             }
 
             private fun init(listSR: List<SpendRecord>?) {
-                val recyclerView = activityReference?.get()?.recList
+                val activity = activityReference?.get()
+                val recyclerView = activity?.recList
 
                 if (listSR != null) {
-                    activityReference?.get()?.runOnUiThread({
-                        activityReference?.get()?.adapter = HistoryAdapter(listSR)
+                    activity?.runOnUiThread({
+                        activity.adapter = HistoryAdapter(listSR, activity)
                         recyclerView?.adapter = activityReference?.get()?.adapter
                     })
                 } else {
-                    activityReference?.get()?.runOnUiThread({
-                        activityReference?.get()?.findViewById<RecyclerView>(R.id.historyCardList)?.visibility = View.GONE
-                        activityReference?.get()?.findViewById<TextView>(R.id.history_empty_txt_iew)?.visibility = View.VISIBLE
+                    activity?.runOnUiThread({
+                        activity.findViewById<RecyclerView>(R.id.historyCardList)?.visibility = View.GONE
+                        activity.findViewById<TextView>(R.id.history_empty_txt_iew)?.visibility = View.VISIBLE
                     })
                 }
             }
@@ -154,7 +155,7 @@ class ViewHistoryActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
+        // Handle action bar itemTitle clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         val id = item.itemId

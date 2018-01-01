@@ -1,5 +1,6 @@
 package com.sas.sainal.expense
 
+import android.graphics.Color
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +12,7 @@ import android.widget.TextView
  * Created by sainal on 12/16/17.
  */
 
-class HistoryAdapter(private val historyList: List<SpendRecord>) : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
+class HistoryAdapter(private val historyList: List<SpendRecord>, private val context:ViewHistoryActivity) : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
     private var mDataSet: MutableList<SpendRecord>? = null
 
@@ -33,6 +34,10 @@ class HistoryAdapter(private val historyList: List<SpendRecord>) : RecyclerView.
                 historyViewHolder.comment.text = historyItem.comment
                 historyViewHolder.comment.visibility = View.VISIBLE
             }
+
+            //mark all spending as red, sparing income
+            if (historyItem.type != ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
+                historyViewHolder.amount.setTextColor(context.resources.getColor(R.color.material_red))
         }
     }
 

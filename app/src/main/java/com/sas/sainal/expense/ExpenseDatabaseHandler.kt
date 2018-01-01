@@ -144,7 +144,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
     }
 
     // Get All SpendRecords
-    private fun getSpendRecords(period: Period, columns: List<String>): Cursor? {
+    private fun getSpendRecords(period: Period, columns: List<String>, excludeIncome:Boolean): Cursor? {
 
         // here this refers to SQLiteDatabase
         val db = this.readableDatabase
@@ -158,11 +158,11 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
         val incomeID = getTypeId(SPECIAL_TYPE_INCOME)
 
-        val selectQuery: String
+        var selectQuery: String
         if (period == Period.ALL) {
             // SQL query for getting all records from the database
             selectQuery = """SELECT $columnStr FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
-                WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name} AND T1.${Key.RECORD_TYPE.name}<>$incomeID"""
+                WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}"""
         } else {
 
             var periodClause = ""
@@ -173,17 +173,17 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
             }
             selectQuery = """SELECT $columnStr FROM ${Table.RECORD.name} T1, ${Table.TYPE.name} T2
                 WHERE T1.${Key.RECORD_TYPE.name}=T2.${Key.TYPE_ID.name}
-                AND T1.${Key.RECORD_DATE.name} BETWEEN datetime('now', '$periodClause') AND datetime('now', 'localtime')
-                AND T1.${Key.RECORD_TYPE.name}<>$incomeID"""
+                AND T1.${Key.RECORD_DATE.name} BETWEEN datetime('now', '$periodClause') AND datetime('now', 'localtime')"""
         }
 
+        selectQuery +=  if (excludeIncome) " AND T1.${Key.RECORD_TYPE.name}<>$incomeID" else ""
         return db.rawQuery(selectQuery, null)
 
     }
 
     fun getPeriodSpendingSum(period: Period): Double {
 
-        val cursor = getSpendRecords(period, listOf("SUM(${Key.RECORD_AMOUNT})"))
+        val cursor = getSpendRecords(period, listOf("SUM(${Key.RECORD_AMOUNT})"), excludeIncome = true)
         cursor.let {
             if (cursor!!.moveToFirst()) {
                 return cursor.getDouble(0)
@@ -195,7 +195,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
     fun getPeriodSpendRecord(period: Period): List<SpendRecord>? {
         val cursor = getSpendRecords(period, listOf(Key.RECORD_ID.name, Key.TYPE_NAME.name,
-                Key.RECORD_AMOUNT.name, Key.RECORD_DATE.name, Key.RECORD_COMMENT.name))
+                Key.RECORD_AMOUNT.name, Key.RECORD_DATE.name, Key.RECORD_COMMENT.name), excludeIncome = false)
         cursor.let {
             if (cursor!!.moveToFirst()) {
                 val recordList = arrayListOf<SpendRecord>()

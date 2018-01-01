@@ -8,11 +8,16 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import java.lang.ref.WeakReference
+import com.mynameismidori.currencypicker.CurrencyPickerListener
+import com.mynameismidori.currencypicker.CurrencyPicker
+
+
 
 
 class ViewSettingsActivity : AppCompatActivity() {
@@ -67,6 +72,16 @@ class ViewSettingsActivity : AppCompatActivity() {
                         CustomDialogFragment(this@ViewSettingsActivity, R.string.clear_db_confirm,
                                 R.string.yes, R.string.cancel, ::success, ::fail)
                     }
+                    1 -> {
+                        val picker = CurrencyPicker.newInstance("Select Currency")  // dialog title
+                        picker.setListener { name, code, symbol, flagDrawableResID ->
+                            // Implement your code here
+                            saveKeyValue(getString(R.string.currency_pref_key),name)
+                            picker.dismiss()
+                        }
+                        picker.isCancelable = true
+                        picker.show(supportFragmentManager, "CURRENCY_PICKER")
+                    }
                 }
             }
 
@@ -97,7 +112,7 @@ class ViewSettingsActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
+        // Handle action bar itemTitle clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         val id = item.itemId
@@ -124,7 +139,8 @@ class ViewSettingsActivity : AppCompatActivity() {
     }
 
     private fun updateSettingsPage() {
-        val items = listOf(SettingsAdapter.SettingsItem("Clear All"))
+        val settingsItem = resources.getStringArray(R.array.settings_item_list)
+        val items = settingsItem.map { SettingsAdapter.SettingsItem(it) }
         recList?.adapter = SettingsAdapter(items)
     }
 
