@@ -3,12 +3,12 @@ package com.sas.sainal.expense
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
+import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.view.ContextThemeWrapper
 import android.view.MenuItem
 import android.widget.*
+import org.json.JSONArray
 import java.lang.ref.WeakReference
 
 
@@ -18,6 +18,7 @@ import java.lang.ref.WeakReference
 class NewRecordActivity : AppCompatActivity() {
 
     private var databaseHandler: ExpenseDatabaseHandler? = null
+    private var typeExclusionList: JSONArray = JSONArray()
 
     private var typeField: Spinner? = null
     private var amountField: EditText? = null
@@ -46,10 +47,10 @@ class NewRecordActivity : AppCompatActivity() {
 
             private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
             override fun doInBackground(vararg params: String): Array<String>? {
-                val databaseHandler = activityReference?.get()?.getDatabaseHandle()
-
+                val activity = activityReference?.get()
+                val databaseHandler = activity?.getDatabaseHandle()
                 return if (params[0] == TYPE_SPENDING || params[0] == TYPE_EDIT_SPENDING) {
-                    databaseHandler?.getAllSpendType()?.toTypedArray()
+                    databaseHandler?.getAllSpendType(activity.typeExclusionList)?.toTypedArray()
                 } else {
                     arrayOf(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
                 }
@@ -165,6 +166,7 @@ class NewRecordActivity : AppCompatActivity() {
         commentField = findViewById(R.id.record_comment_field)
         addBtn = findViewById(R.id.add_record_btn)
         val tempAddBtn = addBtn as Button
+        typeExclusionList = JSONArray(getKeyValue(getString(R.string.type_exclusion_pref_key)))
         when (type) {
             TYPE_INCOME -> {
                 val label = getText(R.string.add_income_text)
@@ -209,7 +211,9 @@ class NewRecordActivity : AppCompatActivity() {
         val type = typeField?.selectedItem.toString()
         val amtTxt = amountField?.text.toString()
         val commentTxt = commentField?.text.toString()
-        if (type == null || type.isEmpty() || type.contains("null", false)) {
+
+        // if there no value is chosen for type, the value will be null
+        if (type.isEmpty() || type.contains("null", false)) {
             Toast.makeText(applicationContext, R.string.type_empty_error, Toast.LENGTH_LONG).show()
         } else if (amtTxt.isEmpty()) {
             Toast.makeText(applicationContext, R.string.amount_empty_error, Toast.LENGTH_LONG).show()
@@ -222,5 +226,11 @@ class NewRecordActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun getKeyValue(key: String): String {
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val defaultValue = "[]"
+        return sharedPref.getString(key, defaultValue)
+    }
 
 }

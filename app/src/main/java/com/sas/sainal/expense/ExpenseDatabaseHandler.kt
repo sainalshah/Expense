@@ -8,6 +8,7 @@ import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import org.json.JSONArray
 
 
 /**
@@ -41,9 +42,9 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
     // Kotlin does not allow static variables or functions
     companion object {
-        val DATABASE_NAME = "expense_development_db"
+        val DATABASE_NAME = "expense_eval_db"
         val DATABASE_VERSION = 1
-
+        val DEBUG_TAG = "db_manager"
         val ERROR_NOT_EXIST = -2L
         val ERROR_EXIST = -3L
         val SQL_ERROR: Long = -1
@@ -60,26 +61,28 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         // type and it is primary key for the table, a new column with name
         // type and it is of type TEXT(String), a new column with name amount as
         // TEXT(String) type
-        val CREATE_TYPE_TABLE_SCRIPT = "CREATE TABLE " + Table.TYPE.name +
+        val createTypeTableScript = "CREATE TABLE " + Table.TYPE.name +
                 "(" +
                 Key.TYPE_ID.name + " INTEGER PRIMARY KEY," +
                 Key.TYPE_NAME.name + " TEXT NOT NULL" +
                 ")"
-        val CREATE_RECORDS_TABLE_SCRIPT = "CREATE TABLE " + Table.RECORD.name +
+        val createRecordsTableScript = "CREATE TABLE " + Table.RECORD.name +
                 "(" +
                 Key.RECORD_ID.name + " INTEGER PRIMARY KEY," +
-                Key.RECORD_TYPE.name + " INTEGER NOT NULL," +
+                Key.RECORD_TYPE.name + " INTEGER NOT NULL" +
+                " REFERENCES " + Table.TYPE.name + " (" + Key.TYPE_ID.name + "), " +
                 Key.RECORD_AMOUNT.name + " DECIMAL(10, 5) NOT NULL," +
                 Key.RECORD_DATE.name + " TEXT NOT NULL," +
-                Key.RECORD_COMMENT.name + " TEXT," +
-                "CONSTRAINT fk_type FOREIGN KEY(" + Key.RECORD_TYPE.name + ") " +
-                "REFERENCES " + Table.TYPE.name + " (" + Key.TYPE_ID.name + ")" +
+                Key.RECORD_COMMENT.name + " TEXT"+
                 ")"
-        sqLiteDatabase.execSQL("PRAGMA foreign_keys = true")
-        sqLiteDatabase.execSQL(CREATE_TYPE_TABLE_SCRIPT)
-        sqLiteDatabase.execSQL(CREATE_RECORDS_TABLE_SCRIPT)
+        sqLiteDatabase.execSQL(createTypeTableScript)
+        sqLiteDatabase.execSQL(createRecordsTableScript)
     }
 
+    override fun onConfigure(db: SQLiteDatabase?) {
+        super.onConfigure(db)
+        db?.execSQL("PRAGMA foreign_keys=ON;")
+    }
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, i: Int, i1: Int) {
         // Drop older record table if it exists
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS ${Table.RECORD.name}")
@@ -323,6 +326,38 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         return null
     }
 
+    fun getAllSpendType(exclude:JSONArray): List<String>? {
+
+        // here this refers to SQLiteDatabase
+        val db = this.readableDatabase
+
+        var excludeString = ""
+        var i = 0
+        while(i<exclude.length()){
+            excludeString += "AND ${Key.TYPE_NAME.name} <> '${exclude.get(i)}' "
+            i++
+        }
+        // SQL query for getting all records from the database
+        val selectQuery = "SELECT  ${Key.TYPE_NAME.name} FROM ${Table.TYPE.name} WHERE ${Key.TYPE_NAME.name} <> '$SPECIAL_TYPE_INCOME' $excludeString"
+        val cursor = db.rawQuery(selectQuery, null)
+
+        cursor.let {
+            if (cursor.moveToFirst()) {
+                val listOfType = arrayListOf<String>()
+                do {
+                    listOfType.add(cursor.getString(0))
+                } while (cursor.moveToNext())
+
+                cursor.close()
+
+                return listOfType
+            }
+        }
+
+        //return null if cursor return null
+        return null
+    }
+
     fun getBalance(): Double {
         //TODO: implement getBalance which returns the difference of total income and total spending
         val db = this.readableDatabase
@@ -358,13 +393,19 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         return returnVal
     }
 
-    fun deleteSpendType(type_name: String) {
+    fun deleteSpendType(type_name: String) :Long{
         val db = this.writableDatabase
-        db.delete(
-                Table.TYPE.name, // table name
-                "${Key.TYPE_NAME.name} = '$type_name'", // selection
-                null// selectionArgs
-        )
+        return try {
+            db.delete(
+                    Table.TYPE.name, // table name
+                    "${Key.TYPE_NAME.name} = '$type_name'", // selection
+                    null// selectionArgs
+            )
+            ERROR_NOT_EXIST
+        }catch (e:SQLException){
+            Log.e(DEBUG_TAG,e.message)
+            SQL_ERROR
+        }
     }
 
 

@@ -3,6 +3,7 @@ package com.sas.sainal.expense
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -14,16 +15,16 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
-import android.widget.TextView
+import org.json.JSONArray
 import java.lang.ref.WeakReference
 
 
 class EditTypesActivity : AppCompatActivity() {
 
 
-    private val TIME_TO_AUTOMATICALLY_DISMISS_ITEM = 3000
     private var recList: RecyclerView? = null
-    val DEBUG_TAG = "ViewHistoryTag"
+    val DEBUG_TAG = "EditTypesTag"
+    private var typeExclusionList:JSONArray = JSONArray()
     private var databaseHandler: ExpenseDatabaseHandler? = null
     var adapter: TypesAdapter? = null
 
@@ -31,8 +32,7 @@ class EditTypesActivity : AppCompatActivity() {
 
         class DbTypesAsyncAdapter(context: EditTypesActivity) : AsyncTask<String, Any, Any>() {
 
-            private var activityReference: WeakReference<EditTypesActivity>? = WeakReference(context)
-
+            private var activityWeakReference: WeakReference<EditTypesActivity>? = WeakReference(context)
             companion object {
 
                 enum class Action {
@@ -57,32 +57,42 @@ class EditTypesActivity : AppCompatActivity() {
             }
 
             override fun doInBackground(vararg params: String) {
-                val databaseHandler = activityReference?.get()?.getDatabaseHandle()
+                val activity = activityWeakReference?.get()
+                val databaseHandler = activity?.getDatabaseHandle()
                 when (action) {
-                    Action.ShowAll -> init(databaseHandler!!.getAllSpendType())
+                    Action.ShowAll -> init(databaseHandler!!.getAllSpendType(activity.typeExclusionList))
                     Action.Add -> databaseHandler!!.addSpendType(params[0])
-                    else -> databaseHandler!!.deleteSpendType(params[0])
+                    else -> {
+                        if(databaseHandler!!.deleteSpendType(params[0]) == ExpenseDatabaseHandler.SQL_ERROR){
+                            /*if sql error is returned, it means this type has dependency in records table
+                            * so cannot be actually be deleted from db, but exclude it from showing in the available list*/
+                            val exclList = activity.typeExclusionList
+                            exclList.put(params[0])
+                            activity.saveKeyValue(activity.getString(R.string.type_exclusion_pref_key),exclList.toString())
+                        }
+                    }
                 }
             }
 
             override fun onPostExecute(result: Any?) {
                 super.onPostExecute(result)
-                if(action == Action.Add){
-                    activityReference?.get()?.updateEditTypePage()
+                if (action == Action.Add) {
+                    activityWeakReference?.get()?.updateEditTypePage()
                 }
             }
 
             private fun init(listSR: List<String>?) {
-                val recyclerView = activityReference?.get()?.recList
+                val activity = activityWeakReference?.get()
+                val recyclerView = activity?.recList
 
                 if (listSR != null) {
-                    activityReference?.get()?.runOnUiThread({
-                        activityReference?.get()?.adapter = TypesAdapter(listSR)
-                        recyclerView?.adapter = activityReference?.get()?.adapter
+                    activity?.runOnUiThread({
+                        activity.adapter = TypesAdapter(listSR)
+                        recyclerView?.adapter = activity.adapter
                     })
                 } else {
-                    activityReference?.get()?.runOnUiThread({
-                        activityReference?.get()?.findViewById<RecyclerView>(R.id.typeCardList)?.visibility = View.GONE
+                    activity?.runOnUiThread({
+                        activity.findViewById<RecyclerView>(R.id.typeCardList)?.visibility = View.GONE
                     })
                 }
             }
@@ -105,6 +115,7 @@ class EditTypesActivity : AppCompatActivity() {
 
         recList = findViewById<View>(R.id.typeCardList) as RecyclerView
 
+        typeExclusionList = JSONArray(getKeyValue(getString(R.string.type_exclusion_pref_key)))
         setupView()
 
         val fab = findViewById<View>(R.id.fab) as FloatingActionButton
@@ -113,17 +124,17 @@ class EditTypesActivity : AppCompatActivity() {
             val builder = AlertDialog.Builder(ContextThemeWrapper(this, R.style.DialogTheme)).setView(R.layout.new_type_content)
                     .setTitle(R.string.new_type_title)
             val dialog = builder.create()
-            dialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.add), { dialogInterface, i ->
+            dialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.add), { _, _ ->
                 run {
                     var newType = dialog.findViewById<EditText>(R.id.new_type)?.text.toString()
-                    if(newType!!.isNotEmpty()) {
+                    if (newType.isNotEmpty()) {
                         newType = newType.substring(0, 1).toUpperCase() + newType.substring(1).toLowerCase()
                         DbTypesAsyncAdapter.addType(this@EditTypesActivity, newType)
                     }
                 }
             })
-            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.cancel), { dialogInterface, i ->
-                {}
+            dialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.cancel), { _, _ ->
+                run {}
             })
             dialog.show()
         }
@@ -190,5 +201,17 @@ class EditTypesActivity : AppCompatActivity() {
         DbTypesAsyncAdapter.showAllType(this)
     }
 
+    private fun saveKeyValue(key: String, valueJSON: String) {
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val editor = sharedPref.edit()
+        editor.putString(key, valueJSON)
+        editor.apply()
+    }
+
+    private fun getKeyValue(key: String): String {
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val defaultValue = "[]"
+        return sharedPref.getString(key, defaultValue)
+    }
 
 }

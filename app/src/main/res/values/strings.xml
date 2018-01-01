@@ -28,6 +28,8 @@
     <string name="new_type_title">Add new type</string>
     <string name="cancel">Cancel</string>
     <string name="add">Add</string>
+
+    <string name="type_exclusion_pref_key">type_exclusion</string>
     <!-- -
         This is an ad unit ID for a banner test ad. Replace with your own banner ad unit id.
         For more information, see https://support.google.com/admob/answer/3052638
