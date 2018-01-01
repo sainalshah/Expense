@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                 //don't setup type table if at least SPECIAL_TYPE_INCOME exists.
                 if (databaseHandler?.getTypeId(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME)
                         == ExpenseDatabaseHandler.ERROR_NOT_EXIST) {
-                    for (type in params) {
+                    for (type in ExpenseDatabaseHandler.ALL_TYPES) {
                         databaseHandler.addSpendType(type)
                     }
                 }
@@ -154,9 +154,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupDB() {
 
 
-        SetupDB(this).execute(ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME,
-                ExpenseDatabaseHandler.TYPE_SHOPPING, ExpenseDatabaseHandler.TYPE_CLOTHING,
-                ExpenseDatabaseHandler.TYPE_GROCERY, ExpenseDatabaseHandler.TYPE_OTHER)
+        SetupDB(this).execute()
 
     }
 

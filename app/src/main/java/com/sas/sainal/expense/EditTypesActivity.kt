@@ -24,7 +24,7 @@ class EditTypesActivity : AppCompatActivity() {
 
     private var recList: RecyclerView? = null
     val DEBUG_TAG = "EditTypesTag"
-    private var typeExclusionList:JSONArray = JSONArray()
+    private var typeExclusionList: JSONArray = JSONArray()
     private var databaseHandler: ExpenseDatabaseHandler? = null
     var adapter: TypesAdapter? = null
 
@@ -33,6 +33,7 @@ class EditTypesActivity : AppCompatActivity() {
         class DbTypesAsyncAdapter(context: EditTypesActivity) : AsyncTask<String, Any, Any>() {
 
             private var activityWeakReference: WeakReference<EditTypesActivity>? = WeakReference(context)
+
             companion object {
 
                 enum class Action {
@@ -63,12 +64,12 @@ class EditTypesActivity : AppCompatActivity() {
                     Action.ShowAll -> init(databaseHandler!!.getAllSpendType(activity.typeExclusionList))
                     Action.Add -> databaseHandler!!.addSpendType(params[0])
                     else -> {
-                        if(databaseHandler!!.deleteSpendType(params[0]) == ExpenseDatabaseHandler.SQL_ERROR){
+                        if (databaseHandler!!.deleteSpendType(params[0]) == ExpenseDatabaseHandler.SQL_ERROR) {
                             /*if sql error is returned, it means this type has dependency in records table
                             * so cannot be actually be deleted from db, but exclude it from showing in the available list*/
                             val exclList = activity.typeExclusionList
                             exclList.put(params[0])
-                            activity.saveKeyValue(activity.getString(R.string.type_exclusion_pref_key),exclList.toString())
+                            activity.saveKeyValue(activity.getString(R.string.type_exclusion_pref_key), exclList.toString())
                         }
                     }
                 }

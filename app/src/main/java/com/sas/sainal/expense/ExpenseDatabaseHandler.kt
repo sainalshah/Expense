@@ -54,6 +54,8 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val TYPE_CLOTHING = "Clothing"
         val TYPE_GROCERY = "Grocery"
         val TYPE_OTHER = "Others"
+
+        val ALL_TYPES = arrayOf(SPECIAL_TYPE_INCOME,TYPE_CLOTHING, TYPE_GROCERY, TYPE_SHOPPING, TYPE_OTHER)
     }
 
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {

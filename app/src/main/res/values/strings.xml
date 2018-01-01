@@ -20,6 +20,7 @@
     <string name="type_empty_error">Please choose a type</string>
     <string name="add_income_text">Add Income</string>
     <string name="balance_low_info">Balance is low</string>
+    <string name="clear_db_confirm">Are you sure to clear all records?</string>
     <string name="edit_spending_text">Edit Income</string>
     <string name="weekly_label">Weekly expense</string>
     <string name="monthly_label">Monthly expense</string>
@@ -27,6 +28,7 @@
     <string name="info_empty_history">No history found</string>
     <string name="new_type_title">Add new type</string>
     <string name="cancel">Cancel</string>
+    <string name="yes">Yes</string>
     <string name="add">Add</string>
 
     <string name="type_exclusion_pref_key">type_exclusion</string>

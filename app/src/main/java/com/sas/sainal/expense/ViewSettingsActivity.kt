@@ -3,15 +3,15 @@ package com.sas.sainal.expense
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
+import android.widget.Toast
 import java.lang.ref.WeakReference
 
 
@@ -25,6 +25,22 @@ class ViewSettingsActivity : AppCompatActivity() {
 
     fun getDatabaseHandle(): ExpenseDatabaseHandler? {
         return databaseHandler
+    }
+
+    companion object {
+        class InitializeDbAsync(context: ViewSettingsActivity) : AsyncTask<String, Any, Any>() {
+
+            private var activityReference: WeakReference<ViewSettingsActivity>? = WeakReference(context)
+            override fun doInBackground(vararg params: String) {
+                val databaseHandler = activityReference?.get()?.getDatabaseHandle()
+                databaseHandler?.clearTable(ExpenseDatabaseHandler.Table.RECORD)
+                databaseHandler?.clearTable(ExpenseDatabaseHandler.Table.TYPE)
+
+                for (type in ExpenseDatabaseHandler.ALL_TYPES) {
+                    databaseHandler?.addSpendType(type)
+                }
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,11 +62,21 @@ class ViewSettingsActivity : AppCompatActivity() {
         recList?.addOnItemTouchListener(RecyclerItemClickListener(application, recList, object : RecyclerItemClickListener.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 // do whatever
-                when {
-                    position == 0 -> {
+                when (position) {
+                    0 -> {
+                        CustomDialogFragment(this@ViewSettingsActivity, R.string.clear_db_confirm,
+                                R.string.yes, R.string.cancel, ::success, ::fail)
                     }
                 }
             }
+
+            private fun success() {
+                InitializeDbAsync(this@ViewSettingsActivity).execute()
+                initializeKeyValue(getString(R.string.type_exclusion_pref_key))
+                Toast.makeText(applicationContext,"All records cleared",Toast.LENGTH_LONG).show()
+            }
+
+            private fun fail() {}
 
             override fun onLongItemClick(view: View, position: Int) {
                 // do whatever
@@ -88,7 +114,7 @@ class ViewSettingsActivity : AppCompatActivity() {
                 startActivity(dbManager)
                 true
             }
-            R.id.edit_types ->{
+            R.id.edit_types -> {
                 val editTypes = Intent(this@ViewSettingsActivity, EditTypesActivity::class.java)
                 startActivity(editTypes)
                 true
@@ -102,5 +128,14 @@ class ViewSettingsActivity : AppCompatActivity() {
         recList?.adapter = SettingsAdapter(items)
     }
 
+    private fun initializeKeyValue(key: String) {
+        saveKeyValue(key, "[]")
+    }
 
+    private fun saveKeyValue(key: String, valueJSON: String) {
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val editor = sharedPref.edit()
+        editor.putString(key, valueJSON)
+        editor.apply()
+    }
 }
