@@ -128,13 +128,18 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.db_manager -> {
-                val dbmanager = Intent(this@MainActivity, AndroidDatabaseManager::class.java)
-                startActivity(dbmanager)
+                val dbManager = Intent(this@MainActivity, AndroidDatabaseManager::class.java)
+                startActivity(dbManager)
                 true
             }
             R.id.view_history ->{
                 val viewHistory = Intent(this@MainActivity, ViewHistoryActivity::class.java)
                 startActivity(viewHistory)
+                true
+            }
+            R.id.edit_types ->{
+                val editTypes = Intent(this@MainActivity, EditTypesActivity::class.java)
+                startActivity(editTypes)
                 true
             }
             else -> super.onOptionsItemSelected(item)

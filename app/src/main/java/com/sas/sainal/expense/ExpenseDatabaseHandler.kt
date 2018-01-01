@@ -41,7 +41,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
 
     // Kotlin does not allow static variables or functions
     companion object {
-        val DATABASE_NAME = "expense_test_db"
+        val DATABASE_NAME = "expense_development_db"
         val DATABASE_VERSION = 1
 
         val ERROR_NOT_EXIST = -2L
@@ -63,18 +63,19 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         val CREATE_TYPE_TABLE_SCRIPT = "CREATE TABLE " + Table.TYPE.name +
                 "(" +
                 Key.TYPE_ID.name + " INTEGER PRIMARY KEY," +
-                Key.TYPE_NAME.name + " TEXT" +
+                Key.TYPE_NAME.name + " TEXT NOT NULL" +
                 ")"
         val CREATE_RECORDS_TABLE_SCRIPT = "CREATE TABLE " + Table.RECORD.name +
                 "(" +
                 Key.RECORD_ID.name + " INTEGER PRIMARY KEY," +
-                Key.RECORD_TYPE.name + " INTEGER," +
-                Key.RECORD_AMOUNT.name + " DECIMAL(10, 5)," +
-                Key.RECORD_DATE.name + " TEXT," +
+                Key.RECORD_TYPE.name + " INTEGER NOT NULL," +
+                Key.RECORD_AMOUNT.name + " DECIMAL(10, 5) NOT NULL," +
+                Key.RECORD_DATE.name + " TEXT NOT NULL," +
                 Key.RECORD_COMMENT.name + " TEXT," +
-                "FOREIGN KEY(" + Key.RECORD_TYPE.name + ") REFERENCES " + Table.TYPE.name + " (" + Key.TYPE_ID.name + ")" +
+                "CONSTRAINT fk_type FOREIGN KEY(" + Key.RECORD_TYPE.name + ") " +
+                "REFERENCES " + Table.TYPE.name + " (" + Key.TYPE_ID.name + ")" +
                 ")"
-        sqLiteDatabase.execSQL("PRAGMA foreign_keys = ON")
+        sqLiteDatabase.execSQL("PRAGMA foreign_keys = true")
         sqLiteDatabase.execSQL(CREATE_TYPE_TABLE_SCRIPT)
         sqLiteDatabase.execSQL(CREATE_RECORDS_TABLE_SCRIPT)
     }
@@ -382,7 +383,7 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         //an array list of cursor to save two cursors one has results from the query
         //other cursor stores error message if any errors are triggered
         val alc = ArrayList<Cursor?>(2)
-        val Cursor2 = MatrixCursor(columns)
+        val cursor2 = MatrixCursor(columns)
         alc.add(null)
         alc.add(null)
 
@@ -391,9 +392,9 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
             val c = sqlDB.rawQuery(Query, null)
 
             //add value to cursor2
-            Cursor2.addRow(arrayOf<Any>("Success"))
+            cursor2.addRow(arrayOf<Any>("Success"))
 
-            alc[1] = Cursor2
+            alc[1] = cursor2
             if (null != c && c.count > 0) {
 
                 alc[0] = c
@@ -406,15 +407,15 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         } catch (sqlEx: SQLException) {
             Log.d("printing exception", sqlEx.toString())
             //if any exceptions are triggered save the error message to cursor an return the arraylist
-            Cursor2.addRow(arrayOf<Any>("" + sqlEx.toString()))
-            alc[1] = Cursor2
+            cursor2.addRow(arrayOf<Any>("" + sqlEx.toString()))
+            alc[1] = cursor2
             return alc
         } catch (ex: Exception) {
             Log.d("printing exception", ex.message)
 
             //if any exceptions are triggered save the error message to cursor an return the arraylist
-            Cursor2.addRow(arrayOf<Any>("" + ex.message))
-            alc[1] = Cursor2
+            cursor2.addRow(arrayOf<Any>("" + ex.message))
+            alc[1] = cursor2
             return alc
         }
 

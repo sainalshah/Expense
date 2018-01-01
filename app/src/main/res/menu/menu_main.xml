@@ -8,6 +8,11 @@
         android:title="@string/view_history_title"
         app:showAsAction="never" />
     <item
+        android:id="@+id/edit_types"
+        android:orderInCategory="100"
+        android:title="@string/edit_types_text"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"

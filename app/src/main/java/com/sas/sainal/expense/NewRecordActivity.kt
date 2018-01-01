@@ -1,9 +1,13 @@
 package com.sas.sainal.expense
 
+import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
+import android.view.ContextThemeWrapper
+import android.view.MenuItem
 import android.widget.*
 import java.lang.ref.WeakReference
 
@@ -21,6 +25,7 @@ class NewRecordActivity : AppCompatActivity() {
     private var addBtn: Button? = null
 
     private var record: SpendRecord? = null
+
     companion object {
         val DEBUG_TAG = "NewRecordActivityTag"
         val INTENT_ACTION_KEY = "spending"
@@ -62,7 +67,7 @@ class NewRecordActivity : AppCompatActivity() {
 
 
                     val adapter = ArrayAdapter(activityReference?.get()?.application,
-                            android.R.layout.simple_spinner_item, items)
+                            android.R.layout.simple_spinner_item, items ?: arrayOf<String>())
 
                     dynamicSpinner?.adapter = adapter
                     if (record != null) {
@@ -88,6 +93,7 @@ class NewRecordActivity : AppCompatActivity() {
 
         class AddNewRecord(context: NewRecordActivity) : AsyncTask<String, Any, Any>() {
             private var activityReference: WeakReference<NewRecordActivity>? = WeakReference(context)
+            private var balanceLow: Boolean = false
 
             enum class Action {
                 Add, Edit
@@ -95,14 +101,14 @@ class NewRecordActivity : AppCompatActivity() {
 
             companion object {
                 private var action = AddNewRecord.Action.Add
-                fun addRecord(context: NewRecordActivity, type: String, amt: String, date: String,comment:String) {
+                fun addRecord(context: NewRecordActivity, type: String, amt: String, date: String, comment: String) {
                     action = AddNewRecord.Action.Add
-                    AddNewRecord(context).execute(type, amt, date,comment)
+                    AddNewRecord(context).execute(type, amt, date, comment)
                 }
 
-                fun editRecord(context: NewRecordActivity, id: String, type: String, amt: String, date: String,comment:String) {
+                fun editRecord(context: NewRecordActivity, id: String, type: String, amt: String, date: String, comment: String) {
                     action = AddNewRecord.Action.Edit
-                    AddNewRecord(context).execute(id, type, amt, date,comment)
+                    AddNewRecord(context).execute(id, type, amt, date, comment)
                 }
             }
 
@@ -110,8 +116,12 @@ class NewRecordActivity : AppCompatActivity() {
                 val databaseHandler = activityReference?.get()?.getDatabaseHandle()
 
                 if (action == Action.Add) {
-                    val newRecord = SpendRecord(params[0], params[1].toDouble(), params[2], params[3])
-                    databaseHandler?.addSpendRecord(newRecord)
+                    if (params[0] == ExpenseDatabaseHandler.SPECIAL_TYPE_INCOME || databaseHandler!!.getBalance() >= params[1].toDouble()) {
+                        val newRecord = SpendRecord(params[0], params[1].toDouble(), params[2], params[3])
+                        databaseHandler?.addSpendRecord(newRecord)
+                    } else {
+                        balanceLow = true
+                    }
                 } else {
                     val newRecord = SpendRecord(params[0].toLong(), params[1], params[2].toDouble(), params[3], params[4])
                     databaseHandler?.updateSpendRecord(newRecord)
@@ -119,6 +129,22 @@ class NewRecordActivity : AppCompatActivity() {
             }
 
             override fun onPostExecute(result: Any) {
+                if (!balanceLow) {
+                    activityReference?.get()?.finish()
+                } else {
+                    balanceLow = false
+                    CustomDialogFragment(activityReference?.get() as AppCompatActivity, R.string.balance_low_info,
+                            R.string.add_income_text, R.string.cancel, ::success, ::fail)
+                }
+            }
+
+            private fun success() {
+                val intent = Intent(activityReference?.get()!!.applicationContext, NewRecordActivity::class.java)
+                        .putExtra(NewRecordActivity.INTENT_ACTION_KEY, NewRecordActivity.TYPE_INCOME)
+                activityReference?.get()!!.applicationContext.startActivity(intent)
+            }
+
+            private fun fail() {
                 activityReference?.get()?.finish()
             }
         }
@@ -163,6 +189,17 @@ class NewRecordActivity : AppCompatActivity() {
         }
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+        // Respond to the action bar's Up/Home button
+            android.R.id.home -> {
+                finish()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     fun getDatabaseHandle(): ExpenseDatabaseHandler? {
         return databaseHandler
     }
@@ -172,14 +209,16 @@ class NewRecordActivity : AppCompatActivity() {
         val type = typeField?.selectedItem.toString()
         val amtTxt = amountField?.text.toString()
         val commentTxt = commentField?.text.toString()
-        if (amtTxt.isNotEmpty()) {
-            if (addBtn?.text == getText(R.string.edit_spending_text)) {
-                AddNewRecord.editRecord(this, record?.id.toString(),type, amtTxt, Datetime().getCurrentDatetime(),commentTxt)
-            } else {
-                AddNewRecord.addRecord(this, type, amtTxt, Datetime().getCurrentDatetime(),commentTxt)
-            }
-        } else {
+        if (type == null || type.isEmpty() || type.contains("null", false)) {
+            Toast.makeText(applicationContext, R.string.type_empty_error, Toast.LENGTH_LONG).show()
+        } else if (amtTxt.isEmpty()) {
             Toast.makeText(applicationContext, R.string.amount_empty_error, Toast.LENGTH_LONG).show()
+        } else {
+            if (addBtn?.text == getText(R.string.edit_spending_text)) {
+                AddNewRecord.editRecord(this, record?.id.toString(), type, amtTxt, Datetime().getCurrentDatetime(), commentTxt)
+            } else {
+                AddNewRecord.addRecord(this, type, amtTxt, Datetime().getCurrentDatetime(), commentTxt)
+            }
         }
     }
 

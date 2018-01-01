@@ -43,6 +43,19 @@ class ViewSettingsActivity : AppCompatActivity() {
         llm.orientation = LinearLayoutManager.VERTICAL
         recList?.layoutManager = llm
 
+        recList?.addOnItemTouchListener(RecyclerItemClickListener(application, recList, object : RecyclerItemClickListener.OnItemClickListener {
+            override fun onItemClick(view: View, position: Int) {
+                // do whatever
+                when {
+                    position == 0 -> {
+                    }
+                }
+            }
+
+            override fun onLongItemClick(view: View, position: Int) {
+                // do whatever
+            }
+        }))
         updateSettingsPage()
     }
 
@@ -75,13 +88,18 @@ class ViewSettingsActivity : AppCompatActivity() {
                 startActivity(dbManager)
                 true
             }
+            R.id.edit_types ->{
+                val editTypes = Intent(this@ViewSettingsActivity, EditTypesActivity::class.java)
+                startActivity(editTypes)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
     private fun updateSettingsPage() {
-        val items = listOf(SettingsAdapter.SettingsItem("Edit available types"))
-        recList?.adapter = SettingsAdapter(items,this)
+        val items = listOf(SettingsAdapter.SettingsItem("Clear All"))
+        recList?.adapter = SettingsAdapter(items)
     }
 
 

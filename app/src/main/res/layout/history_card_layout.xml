@@ -32,7 +32,6 @@
                 android:layout_below="@+id/history_type"
                 android:layout_gravity="start"
                 android:textSize="20sp"
-                android:textStyle="italic"
                 android:visibility="gone" />
 
             <TextView
