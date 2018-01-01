@@ -77,6 +77,7 @@ class ViewSettingsActivity : AppCompatActivity() {
                         picker.setListener { name, code, symbol, flagDrawableResID ->
                             // Implement your code here
                             saveKeyValue(getString(R.string.currency_pref_key),name)
+                            updateSettingsPage(name)
                             picker.dismiss()
                         }
                         picker.isCancelable = true
@@ -97,7 +98,7 @@ class ViewSettingsActivity : AppCompatActivity() {
                 // do whatever
             }
         }))
-        updateSettingsPage()
+        updateSettingsPage(getKeyValue(getString(R.string.currency_pref_key)))
     }
 
     override fun onDestroy() {
@@ -138,10 +139,10 @@ class ViewSettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateSettingsPage() {
+    private fun updateSettingsPage(currency:String) {
         val settingsItem = resources.getStringArray(R.array.settings_item_list)
         val items = settingsItem.map { SettingsAdapter.SettingsItem(it) }
-        recList?.adapter = SettingsAdapter(items)
+        recList?.adapter = SettingsAdapter(items, currency)
     }
 
     private fun initializeKeyValue(key: String) {
@@ -153,5 +154,12 @@ class ViewSettingsActivity : AppCompatActivity() {
         val editor = sharedPref.edit()
         editor.putString(key, valueJSON)
         editor.apply()
+    }
+
+
+    private fun getKeyValue(key: String): String {
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val defaultValue = "[]"
+        return sharedPref.getString(key, defaultValue)
     }
 }

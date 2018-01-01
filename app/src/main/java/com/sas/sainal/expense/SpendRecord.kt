@@ -44,7 +44,13 @@ data class SpendRecord(var id: Long?, var type: String, var amount: Double, var 
     }
 
     companion object CREATOR : Parcelable.Creator<SpendRecord> {
-        var AMOUNT_FORMAT = "$%.2f"
+        var CURRENCY_SYMBOL = "$"
+        val DEFAULT_CURRENCY_NAME = "United States Dollar"
+        var AMOUNT_FORMAT = "$CURRENCY_SYMBOL%.2f"
+
+        fun updateCurrencySymbol(currencyCode : String){
+            AMOUNT_FORMAT = "$currencyCode%.2f"
+        }
         override fun createFromParcel(parcel: Parcel): SpendRecord {
             return SpendRecord(parcel)
         }

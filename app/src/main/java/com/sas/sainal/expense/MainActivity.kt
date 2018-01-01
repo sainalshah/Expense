@@ -3,6 +3,7 @@ package com.sas.sainal.expense
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -12,6 +13,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import java.lang.ref.WeakReference
+import com.mynameismidori.currencypicker.ExtendedCurrency
+
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,14 +34,14 @@ class MainActivity : AppCompatActivity() {
                 val weeklyAmt = databaseHandler!!.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
                 val monthlyAmt = databaseHandler.getPeriodSpendingSum(ExpenseDatabaseHandler.Period.LAST_WEEK)
                 val balance = databaseHandler.getBalance()
-                return arrayOf(weeklyAmt, monthlyAmt,balance)
+                return arrayOf(weeklyAmt, monthlyAmt, balance)
             }
 
             override fun onPostExecute(result: Array<Double>) {
-                updateRecyclerView(result[0], result[1],result[2])
+                updateRecyclerView(result[0], result[1], result[2])
             }
 
-            private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double, balanceAmount:Double) {
+            private fun updateRecyclerView(weeklyAmount: Double, monthlyAmount: Double, balanceAmount: Double) {
                 val weekly = String.format(SpendRecord.AMOUNT_FORMAT, weeklyAmount)
                 val monthly = String.format(SpendRecord.AMOUNT_FORMAT, monthlyAmount)
                 val balance = String.format(SpendRecord.AMOUNT_FORMAT, balanceAmount)
@@ -96,6 +100,7 @@ class MainActivity : AppCompatActivity() {
         llm.orientation = LinearLayoutManager.VERTICAL
         recList?.layoutManager = llm
 
+        setupCurrency(getKeyValue(getString(R.string.currency_pref_key)))
         updateHomePage()
     }
 
@@ -132,12 +137,12 @@ class MainActivity : AppCompatActivity() {
                 startActivity(dbManager)
                 true
             }
-            R.id.view_history ->{
+            R.id.view_history -> {
                 val viewHistory = Intent(this@MainActivity, ViewHistoryActivity::class.java)
                 startActivity(viewHistory)
                 true
             }
-            R.id.edit_types ->{
+            R.id.edit_types -> {
                 val editTypes = Intent(this@MainActivity, EditTypesActivity::class.java)
                 startActivity(editTypes)
                 true
@@ -152,11 +157,16 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun setupDB() {
-
-
         SetupDB(this).execute()
-
     }
 
-
+    private fun setupCurrency(currencyName:String) {
+        val currency = ExtendedCurrency.getCurrencyByName(currencyName)
+        SpendRecord.updateCurrencySymbol(currency.symbol)
+    }
+    private fun getKeyValue(key: String): String {
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val defaultValue = if( key == getString(R.string.currency_pref_key)) SpendRecord.DEFAULT_CURRENCY_NAME else "[]"
+        return sharedPref.getString(key, defaultValue)
+    }
 }

@@ -11,7 +11,7 @@ import android.widget.TextView
  * Created by sainal on 12/16/17.
  */
 
-class SettingsAdapter(private val historyList: List<SettingsItem>) : RecyclerView.Adapter<SettingsAdapter.SettingsViewHolder>() {
+class SettingsAdapter(private val historyList: List<SettingsItem>, private val currency:String) : RecyclerView.Adapter<SettingsAdapter.SettingsViewHolder>() {
 
     override fun getItemCount(): Int {
         return historyList.size
@@ -20,6 +20,10 @@ class SettingsAdapter(private val historyList: List<SettingsItem>) : RecyclerVie
     override fun onBindViewHolder(settingsViewHolder: SettingsViewHolder, i: Int) {
         val historyItem = historyList[i]
         settingsViewHolder.itemTitle.text = historyItem.name
+        if(i == 1){ //second position is currency
+            settingsViewHolder.itemValue.visibility = View.VISIBLE
+            settingsViewHolder.itemValue.text = "$currency selected"
+        }
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): SettingsViewHolder {
