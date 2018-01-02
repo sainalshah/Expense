@@ -44,7 +44,7 @@ data class SpendRecord(var id: Long?, var type: String, var amount: Double, var 
     }
 
     companion object CREATOR : Parcelable.Creator<SpendRecord> {
-        var CURRENCY_SYMBOL = "$"
+        private var CURRENCY_SYMBOL = "$"
         val DEFAULT_CURRENCY_NAME = "United States Dollar"
         var AMOUNT_FORMAT = "$CURRENCY_SYMBOL%.2f"
 
