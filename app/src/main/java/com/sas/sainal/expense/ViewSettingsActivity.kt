@@ -159,7 +159,7 @@ class ViewSettingsActivity : AppCompatActivity() {
 
     private fun getKeyValue(key: String): String {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        val defaultValue = "[]"
+        val defaultValue = if( key == getString(R.string.currency_pref_key)) SpendRecord.DEFAULT_CURRENCY_NAME else "[]"
         return sharedPref.getString(key, defaultValue)
     }
 }

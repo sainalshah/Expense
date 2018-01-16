@@ -7,6 +7,7 @@ import android.preference.PreferenceManager
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
@@ -62,7 +63,13 @@ class EditTypesActivity : AppCompatActivity() {
                 val databaseHandler = activity?.getDatabaseHandle()
                 when (action) {
                     Action.ShowAll -> init(databaseHandler!!.getAllSpendType(activity.typeExclusionList))
-                    Action.Add -> databaseHandler!!.addSpendType(params[0])
+                    Action.Add -> {
+                        databaseHandler!!.addSpendType(params[0])
+                        activity.runOnUiThread({
+                            activity.adapter?.addToTop(params[0])
+                            activity.recList?.scrollToPosition(0)
+                        })
+                    }
                     else -> {
                         if (databaseHandler!!.deleteSpendType(params[0]) == ExpenseDatabaseHandler.SQL_ERROR) {
                             /*if sql error is returned, it means this type has dependency in records table
@@ -72,13 +79,6 @@ class EditTypesActivity : AppCompatActivity() {
                             activity.saveKeyValue(activity.getString(R.string.type_exclusion_pref_key), exclList.toString())
                         }
                     }
-                }
-            }
-
-            override fun onPostExecute(result: Any?) {
-                super.onPostExecute(result)
-                if (action == Action.Add) {
-                    activityWeakReference?.get()?.updateEditTypePage()
                 }
             }
 
@@ -142,8 +142,13 @@ class EditTypesActivity : AppCompatActivity() {
     }
 
     private fun setupView() {
-        val mLayoutManager = LinearLayoutManager(this)
+        val mLayoutManager = object : LinearLayoutManager(this) {
+            override fun supportsPredictiveItemAnimations(): Boolean {
+                return true
+            }
+        }
         recList?.layoutManager = mLayoutManager
+        recList?.itemAnimator = DefaultItemAnimator()
         recList?.addOnItemTouchListener(RecyclerItemClickListener(application, recList, object : RecyclerItemClickListener.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 // do whatever

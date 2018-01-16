@@ -63,20 +63,13 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
         // type and it is primary key for the table, a new column with name
         // type and it is of type TEXT(String), a new column with name amount as
         // TEXT(String) type
-        val createTypeTableScript = "CREATE TABLE " + Table.TYPE.name +
-                "(" +
-                Key.TYPE_ID.name + " INTEGER PRIMARY KEY," +
-                Key.TYPE_NAME.name + " TEXT NOT NULL" +
-                ")"
-        val createRecordsTableScript = "CREATE TABLE " + Table.RECORD.name +
-                "(" +
-                Key.RECORD_ID.name + " INTEGER PRIMARY KEY," +
-                Key.RECORD_TYPE.name + " INTEGER NOT NULL" +
-                " REFERENCES " + Table.TYPE.name + " (" + Key.TYPE_ID.name + "), " +
-                Key.RECORD_AMOUNT.name + " DECIMAL(10, 5) NOT NULL," +
-                Key.RECORD_DATE.name + " TEXT NOT NULL," +
-                Key.RECORD_COMMENT.name + " TEXT"+
-                ")"
+        val createTypeTableScript = """CREATE TABLE ${Table.TYPE.name}(${Key.TYPE_ID.name} INTEGER PRIMARY KEY,
+            |${Key.TYPE_NAME.name} TEXT NOT NULL)""".trimMargin()
+        val createRecordsTableScript = """CREATE TABLE ${Table.RECORD.name}(${Key.RECORD_ID.name} INTEGER PRIMARY KEY,
+            |${Key.RECORD_TYPE.name} INTEGER NOT NULL REFERENCES ${Table.TYPE.name} (${Key.TYPE_ID.name}),
+            |${Key.RECORD_AMOUNT.name} DECIMAL(10, 5) NOT NULL,${Key.RECORD_DATE.name} TEXT NOT NULL,
+            |${Key.RECORD_COMMENT.name} TEXT)""".trimMargin()
+
         sqLiteDatabase.execSQL(createTypeTableScript)
         sqLiteDatabase.execSQL(createRecordsTableScript)
     }
@@ -340,7 +333,9 @@ class ExpenseDatabaseHandler(context: Context) : SQLiteOpenHelper(context,
             i++
         }
         // SQL query for getting all records from the database
-        val selectQuery = "SELECT  ${Key.TYPE_NAME.name} FROM ${Table.TYPE.name} WHERE ${Key.TYPE_NAME.name} <> '$SPECIAL_TYPE_INCOME' $excludeString"
+        val selectQuery = """SELECT  ${Key.TYPE_NAME.name} FROM ${Table.TYPE.name}
+            |WHERE ${Key.TYPE_NAME.name} <> '$SPECIAL_TYPE_INCOME' $excludeString
+            |ORDER BY ${Key.TYPE_ID} DESC""".trimMargin()
         val cursor = db.rawQuery(selectQuery, null)
 
         cursor.let {

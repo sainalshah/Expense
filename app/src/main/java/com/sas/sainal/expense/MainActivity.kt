@@ -9,9 +9,13 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.InterstitialAd
+import com.google.android.gms.ads.MobileAds
 import java.lang.ref.WeakReference
 import com.mynameismidori.currencypicker.ExtendedCurrency
 
@@ -20,7 +24,7 @@ import com.mynameismidori.currencypicker.ExtendedCurrency
 
 class MainActivity : AppCompatActivity() {
 
-
+    private var mInterstitialAd:InterstitialAd? = null
     private var recList: RecyclerView? = null
     val DEBUG_TAG = "MainActivityTag"
     private var databaseHandler: ExpenseDatabaseHandler? = null
@@ -102,8 +106,21 @@ class MainActivity : AppCompatActivity() {
 
         setupCurrency(getKeyValue(getString(R.string.currency_pref_key)))
         updateHomePage()
+
+        MobileAds.initialize(this, getString(R.string.ad_app_id))
+        mInterstitialAd = InterstitialAd(this)
+        mInterstitialAd!!.adUnitId = getString(R.string.test_interstitial_ad_unit_id)
+        mInterstitialAd!!.loadAd(AdRequest.Builder().build())
     }
 
+    override fun onBackPressed() {
+        if (mInterstitialAd!!.isLoaded) {
+            mInterstitialAd!!.show()
+        }else {
+            Log.d(DEBUG_TAG, "The interstitial wasn't loaded yet.");
+        }
+        super.onBackPressed()
+    }
     override fun onDestroy() {
         super.onDestroy()
         recList = null

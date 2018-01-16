@@ -38,6 +38,10 @@ class TypesAdapter(historyList: List<String>) : RecyclerView.Adapter<TypesAdapte
         return TypesViewHolder(itemView)
     }
 
+    fun addToTop(type:String){
+        mDataSet?.add(0,type)
+        notifyItemInserted(0)
+    }
     fun remove(position: Int):String {
         val item = mDataSet?.get(position)
         mDataSet?.removeAt(position)
